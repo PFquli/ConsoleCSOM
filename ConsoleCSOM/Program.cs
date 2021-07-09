@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.SharePoint.Client.Taxonomy;
+using System.Collections.Generic;
 
 using SP = Microsoft.SharePoint.Client;
 
@@ -38,6 +39,7 @@ namespace ConsoleCSOM
                     await CreateNewTerms(ctx);
                     await CreateSiteFields(ctx);
                     await CreateContentTypeAndAddToList(ctx);
+                    await CreateNewListItems(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -146,7 +148,7 @@ namespace ConsoleCSOM
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
             ctx.Load(contentTypes);
             ctx.ExecuteQuery();
-            const string id = "0x0101009189AB5D3D2647B580F011DA2F356FB2";
+            string id = "0x0100" + Guid.NewGuid().ToString("N"); // parent is Item type
 
             foreach (var item in contentTypes)
             {
@@ -164,6 +166,23 @@ namespace ConsoleCSOM
             newCt.Group = "Custom Content Types";
             // Create the content type.
             ContentType testContentType = contentTypes.Add(newCt);
+            // add site fields about and city to content type
+            Field targetField0 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("about");
+            Field targetField1 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("citycsomtest");
+
+            FieldLinkCreationInformation fldLink0 = new FieldLinkCreationInformation();
+            FieldLinkCreationInformation fldLink1 = new FieldLinkCreationInformation();
+            fldLink0.Field = targetField0;
+            fldLink1.Field = targetField1;
+
+            // If uou set this to "true", the column getting added to the content type will be added as "required" field
+            fldLink0.Field.Required = false;
+            fldLink1.Field.Required = false;
+
+            testContentType.FieldLinks.Add(fldLink0);
+            testContentType.FieldLinks.Add(fldLink1);
+            testContentType.Update(false);
+
             ctx.ExecuteQuery();
             // Get list
             List testList = ctx.Web.Lists.GetByTitle("CSOM Test");
@@ -171,6 +190,42 @@ namespace ConsoleCSOM
             testList.ContentTypes.AddExistingContentType(testContentType);
             testList.Update();
             ctx.Web.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        internal class ListItemModel
+        {
+            public ListItemModel()
+            {
+            }
+
+            public string Title { get; set; }
+            public string About { get; set; }
+            public string City { get; set; }
+        }
+
+        private async static Task CreateNewListItems(ClientContext ctx)
+        {
+            List<ListItemModel> listItems = new List<ListItemModel>
+            {
+                new ListItemModel{Title="ListItem1", About="City1", City="Ho Chi Minh"},
+                new ListItemModel{Title="ListItem2", About="City2", City="Paris"},
+                new ListItemModel{Title="ListItem3", About="City3", City="London"},
+                new ListItemModel{Title="ListItem4", About="City4", City="Can Tho"},
+                new ListItemModel{Title="ListItem5", About="City5", City="New York"}
+            };
+            SP.List oList = ctx.Web.Lists.GetByTitle("CSOM Test");
+            ctx.Load(oList);
+            ctx.ExecuteQuery();
+            foreach (ListItemModel model in listItems)
+            {
+                ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
+                ListItem oListItem = oList.AddItem(itemCreateInfo);
+                oListItem["Title"] = model.Title;
+                oListItem["about"] = model.About;
+                oListItem["citycsomtest"] = model.City;
+                oListItem.Update();
+            }
             await ctx.ExecuteQueryAsync();
         }
 
