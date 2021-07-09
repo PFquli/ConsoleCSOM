@@ -37,6 +37,7 @@ namespace ConsoleCSOM
                     await CreateTermSetInDevTenant(ctx);
                     await CreateNewTerms(ctx);
                     await CreateSiteFields(ctx);
+                    await CreateContentTypeAndAddToList(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -138,6 +139,39 @@ namespace ConsoleCSOM
             catch (Exception e)
             {
             }
+        }
+
+        private async static Task CreateContentTypeAndAddToList(ClientContext ctx)
+        {
+            ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
+            ctx.Load(contentTypes);
+            ctx.ExecuteQuery();
+            const string id = "0x0101009189AB5D3D2647B580F011DA2F356FB2";
+
+            foreach (var item in contentTypes)
+            {
+                if (item.StringId == id)
+                    return;
+            }
+
+            // Create a Content Type Information object.
+            ContentTypeCreationInformation newCt = new ContentTypeCreationInformation();
+            // Set the name for the content type.
+            newCt.Name = "CSOM Test content type";
+            // Inherit from oob document - 0x0101 and assign.
+            newCt.Id = id;
+            // Set content type to be available from specific group.
+            newCt.Group = "Custom Content Types";
+            // Create the content type.
+            ContentType testContentType = contentTypes.Add(newCt);
+            ctx.ExecuteQuery();
+            // Get list
+            List testList = ctx.Web.Lists.GetByTitle("CSOM Test");
+            // Add content type to list and update
+            testList.ContentTypes.AddExistingContentType(testContentType);
+            testList.Update();
+            ctx.Web.Update();
+            await ctx.ExecuteQueryAsync();
         }
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
