@@ -46,6 +46,7 @@ namespace ConsoleCSOM
                     //await CreateNewListItems(ctx);
                     await UpdateDefaultValueForAboutField(ctx);
                     await AddNewListItemsAfterUpdatingAboutDefault(ctx);
+                    await UpdateDefaultValueForCityField(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -333,11 +334,11 @@ namespace ConsoleCSOM
             TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
 
             ctx.Load(oList);
-            for (var i = 0; i < 2; i++)
+            for (var i = 10; i < 2; i++)
             {
                 ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
-                oListItem["Title"] = "Title" + (i + 10);
+                oListItem["Title"] = "Title" + i;
 
                 taxField.SetFieldValueByValue(oListItem, new TaxonomyFieldValue()
                 {
@@ -354,7 +355,7 @@ namespace ConsoleCSOM
         {
             SP.List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
 
-            Field field = oList.Fields.GetByTitle("cityCSOM");
+            Field field = ctx.Web.Fields.GetByTitle("cityCSOM");
 
             ctx.Load(field);
 
@@ -362,11 +363,39 @@ namespace ConsoleCSOM
 
             TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
 
-            // Need to load field to get default value of it
-            ctx.Load(taxField);
+            ctx.Load(taxField, t => t.DefaultValue);
+            ctx.ExecuteQuery(); // Get the Taxonomy Field
 
-            taxField.DefaultValue = "about default";
+            TaxonomyFieldValue defaultValue = new TaxonomyFieldValue();
+            defaultValue.WssId = -1;
+            defaultValue.Label = "Ho Chi Minh";
+            // GUID should be stored lowercase, otherwise it will not work in Office 2010
+            defaultValue.TermGuid = "2fca8c5f-0def-442f-8386-feb21568109b";
+
+            // Get the Validated String for the taxonomy value
+            var validatedValue = taxField.GetValidatedString(defaultValue);
+            ctx.ExecuteQuery();
+
+            // Set the selected default value for the site column
+            taxField.DefaultValue = validatedValue.Value;
+            taxField.UserCreated = false;
             taxField.UpdateAndPushChanges(true);
+            await ctx.ExecuteQueryAsync();
+        }
+
+        private async static Task AddNewListItemsAfterUpdatingCityDefault(ClientContext ctx)
+        {
+            List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
+
+            ctx.Load(oList);
+            for (var i = 20; i < 2; i++)
+            {
+                ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
+                ListItem oListItem = oList.AddItem(itemCreateInfo);
+                oListItem["Title"] = "Title" + i;
+                oListItem["about"] = "about" + i;
+                oListItem.Update();
+            }
             await ctx.ExecuteQueryAsync();
         }
 
