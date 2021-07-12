@@ -44,9 +44,10 @@ namespace ConsoleCSOM
                     //await AddFieldToContentType(ctx);
                     //await AddContentTypeToList(ctx);
                     //await CreateNewListItems(ctx);
-                    await UpdateDefaultValueForAboutField(ctx);
-                    await AddNewListItemsAfterUpdatingAboutDefault(ctx);
-                    await UpdateDefaultValueForCityField(ctx);
+                    //await UpdateDefaultValueForAboutField(ctx);
+                    //await AddNewListItemsAfterUpdatingAboutDefault(ctx);
+                    //await UpdateDefaultValueForCityField(ctx);
+                    await AddNewListItemsAfterUpdatingCityDefault(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -56,6 +57,8 @@ namespace ConsoleCSOM
             {
             }
         }
+
+        #region 1/1
 
         private static async Task CreateCSOMTestList(ClientContext ctx)
         {
@@ -73,6 +76,10 @@ namespace ConsoleCSOM
             catch (Exception ex)
             { }
         }
+
+        #endregion 1/1
+
+        #region 1/2
 
         private static async Task CreateTermSetInDevTenant(ClientContext ctx)
         {
@@ -96,6 +103,10 @@ namespace ConsoleCSOM
             {
             }
         }
+
+        #endregion 1/2
+
+        #region 1/3
 
         private async static Task CreateNewTerms(ClientContext ctx)
         {
@@ -121,6 +132,10 @@ namespace ConsoleCSOM
             {
             }
         }
+
+        #endregion 1/3
+
+        #region 1/4
 
         private async static Task CreateSiteFields(ClientContext ctx)
         {
@@ -169,6 +184,10 @@ namespace ConsoleCSOM
             {
             }
         }
+
+        #endregion 1/4
+
+        #region 1/5
 
         private async static Task CreateContentType(ClientContext ctx)
         {
@@ -276,6 +295,10 @@ namespace ConsoleCSOM
             await ctx.ExecuteQueryAsync();
         }
 
+        #endregion 1/5
+
+        #region 1/6
+
         private async static Task CreateNewListItems(ClientContext ctx)
         {
             SP.List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
@@ -306,6 +329,10 @@ namespace ConsoleCSOM
             }
             await ctx.ExecuteQueryAsync();
         }
+
+        #endregion 1/6
+
+        #region 1/7
 
         private async static Task UpdateDefaultValueForAboutField(ClientContext ctx)
         {
@@ -350,6 +377,10 @@ namespace ConsoleCSOM
             }
             await ctx.ExecuteQueryAsync();
         }
+
+        #endregion 1/7
+
+        #region 1/8
 
         private async static Task UpdateDefaultValueForCityField(ClientContext ctx)
         {
@@ -398,6 +429,8 @@ namespace ConsoleCSOM
             }
             await ctx.ExecuteQueryAsync();
         }
+
+        #endregion 1/8
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
