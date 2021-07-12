@@ -39,8 +39,8 @@ namespace ConsoleCSOM
                     //await CreateNewTerms(ctx);
                     //await CreateSiteFields(ctx);
                     //await CreateContentType(ctx);
-                    await AddFieldToContentType(ctx);
-                    await AddContentTypeToList(ctx);
+                    //await AddFieldToContentType(ctx);
+                    //await AddContentTypeToList(ctx);
                     await CreateNewListItems(ctx);
                 }
 
@@ -130,7 +130,7 @@ namespace ConsoleCSOM
                                             DisplayName='about'
                                             Description=''
                                             Group='Custom Columns'/>", true, AddFieldOptions.DefaultValue);
-                fields.AddFieldAsXml(
+                var field = fields.AddFieldAsXml(
                     @"<Field ID='2E660010-96AE-4CA1-895B-DE92AB67451F' Type='TaxonomyFieldType'
                                             Name='cityCSOM'
                                             Required='FALSE'
@@ -138,6 +138,26 @@ namespace ConsoleCSOM
                                             Description=''
                                             Hidden='FALSE'
                                             Group='Custom Columns'/>", true, AddFieldOptions.DefaultValue);
+                TaxonomyField taxonomyField = ctx.CastTo<TaxonomyField>(field);
+                TaxonomySession session = TaxonomySession.GetTaxonomySession(ctx);
+                TermStore termStore = session.GetDefaultSiteCollectionTermStore();
+
+                // Get the term group by Name
+                TermGroup termGroup = termStore.Groups.GetByName("Training");
+                // Get the term set by Name
+                TermSet termSet = termGroup.TermSets.GetByName("city-Quoc");
+
+                ctx.Load(termSet, tst => tst.Id);
+                ctx.Load(termStore, ts => ts.Id);
+                ctx.ExecuteQuery();
+
+                var termStoreId = termStore.Id;
+                var termSetId = termSet.Id;
+                taxonomyField.SspId = termStoreId;
+                taxonomyField.TermSetId = termSetId;
+                taxonomyField.TargetTemplate = String.Empty;
+                taxonomyField.AnchorId = Guid.Empty;
+                taxonomyField.Update();
                 await ctx.ExecuteQueryAsync();
             }
             catch (Exception e)
@@ -251,37 +271,32 @@ namespace ConsoleCSOM
             await ctx.ExecuteQueryAsync();
         }
 
-        internal class ListItemModel
-        {
-            public ListItemModel()
-            {
-            }
-
-            public string Title { get; set; }
-            public string About { get; set; }
-            public string City { get; set; }
-        }
-
         private async static Task CreateNewListItems(ClientContext ctx)
         {
-            List<ListItemModel> listItems = new List<ListItemModel>
-            {
-                new ListItemModel{Title="ListItem1", About="City1", City="Ho Chi Minh"},
-                new ListItemModel{Title="ListItem2", About="City2", City="Paris"},
-                new ListItemModel{Title="ListItem3", About="City3", City="London"},
-                new ListItemModel{Title="ListItem4", About="City4", City="Can Tho"},
-                new ListItemModel{Title="ListItem5", About="City5", City="New York"}
-            };
             SP.List oList = ctx.Web.Lists.GetByTitle("CSOM Test");
-            ctx.Load(oList);
+
+            Field field = ctx.Web.Fields.GetByTitle("cityCSOM");
+
+            ctx.Load(field);
+
             ctx.ExecuteQuery();
-            foreach (ListItemModel model in listItems)
+
+            TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
+
+            ctx.Load(oList);
+            for (var i = 0; i < 5; i++)
             {
                 ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
-                oListItem["Title"] = model.Title;
-                oListItem["about"] = model.About;
-                oListItem["cityCSOM"] = model.City;
+                oListItem["Title"] = "Title" + i;
+                oListItem["about"] = "about" + i;
+
+                taxField.SetFieldValueByValue(oListItem, new TaxonomyFieldValue()
+                {
+                    WssId = -1, // alway let it -1
+                    Label = "Ho Chi Minh",
+                    TermGuid = "2fca8c5f-0def-442f-8386-feb21568109b"
+                });
                 oListItem.Update();
             }
             await ctx.ExecuteQueryAsync();
