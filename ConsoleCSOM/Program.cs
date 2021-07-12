@@ -32,13 +32,15 @@ namespace ConsoleCSOM
 
                     Console.WriteLine($"Site {ctx.Web.Title}");
 
-                    await CreateCSOMTestList(ctx);
+                    //await CreateCSOMTestList(ctx);
                     //await SimpleCamlQueryAsync(ctx);
                     //await CsomTermSetAsync(ctx);
-                    await CreateTermSetInDevTenant(ctx);
-                    await CreateNewTerms(ctx);
-                    await CreateSiteFields(ctx);
-                    await CreateContentTypeAndAddToList(ctx);
+                    //await CreateTermSetInDevTenant(ctx);
+                    //await CreateNewTerms(ctx);
+                    //await CreateSiteFields(ctx);
+                    //await CreateContentType(ctx);
+                    await AddFieldToContentType(ctx);
+                    await AddContentTypeToList(ctx);
                     await CreateNewListItems(ctx);
                 }
 
@@ -130,9 +132,9 @@ namespace ConsoleCSOM
                                             Group='Custom Columns'/>", true, AddFieldOptions.DefaultValue);
                 fields.AddFieldAsXml(
                     @"<Field ID='2E660010-96AE-4CA1-895B-DE92AB67451F' Type='TaxonomyFieldType'
-                                            Name='city CSOM test'
+                                            Name='cityCSOM'
                                             Required='FALSE'
-                                            DisplayName='citycsomtest'
+                                            DisplayName='cityCSOM'
                                             Description=''
                                             Hidden='FALSE'
                                             Group='Custom Columns'/>", true, AddFieldOptions.DefaultValue);
@@ -143,12 +145,12 @@ namespace ConsoleCSOM
             }
         }
 
-        private async static Task CreateContentTypeAndAddToList(ClientContext ctx)
+        private async static Task CreateContentType(ClientContext ctx)
         {
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
             ctx.Load(contentTypes);
             ctx.ExecuteQuery();
-            string id = "0x0100" + Guid.NewGuid().ToString("N"); // parent is Item type
+            string id = "0x0100" + new Guid("7CDA06D1-66B4-4450-8FC3-28CD64FB2C3C").ToString("N"); // parent is Item type
 
             foreach (var item in contentTypes)
             {
@@ -166,24 +168,80 @@ namespace ConsoleCSOM
             newCt.Group = "Custom Content Types";
             // Create the content type.
             ContentType testContentType = contentTypes.Add(newCt);
-            // add site fields about and city to content type
-            Field targetField0 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("about");
-            Field targetField1 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("citycsomtest");
+            await ctx.ExecuteQueryAsync();
+        }
 
-            FieldLinkCreationInformation fldLink0 = new FieldLinkCreationInformation();
-            FieldLinkCreationInformation fldLink1 = new FieldLinkCreationInformation();
-            fldLink0.Field = targetField0;
-            fldLink1.Field = targetField1;
-
-            // If uou set this to "true", the column getting added to the content type will be added as "required" field
-            fldLink0.Field.Required = false;
-            fldLink1.Field.Required = false;
-
-            testContentType.FieldLinks.Add(fldLink0);
-            testContentType.FieldLinks.Add(fldLink1);
-            testContentType.Update(false);
-
+        private async static Task AddFieldToContentType(ClientContext ctx)
+        {
+            ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
+            ctx.Load(contentTypes);
             ctx.ExecuteQuery();
+            // Give content type name over here
+            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "CSOM Test content type" select contentType).FirstOrDefault();
+
+            ctx.Load(testContentType);
+            // Add site fields about and city to content type
+            Field targetField0 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("about");
+            Field targetField1 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("cityCSOM");
+
+            ctx.Load(targetField0);
+            ctx.Load(targetField1);
+            ctx.ExecuteQuery();
+
+            // Workaround: check for duplicate field, delete it and try adding again
+            bool success = false;
+            while (!success)
+            {
+                try
+                {
+                    FieldLinkCreationInformation fldLink0 = new FieldLinkCreationInformation();
+                    FieldLinkCreationInformation fldLink1 = new FieldLinkCreationInformation();
+                    fldLink0.Field = targetField0;
+                    fldLink1.Field = targetField1;
+
+                    fldLink0.Field.Required = false;
+                    fldLink1.Field.Required = false;
+
+                    testContentType.FieldLinks.Add(fldLink0);
+                    testContentType.FieldLinks.Add(fldLink1);
+                    testContentType.Update(false);
+
+                    await ctx.ExecuteQueryAsync();
+                    success = true;
+                }
+                catch (ServerException ex)
+                {
+                    if (ex.Message.Contains("A duplicate field name"))
+                    {
+                        var splitMessage = ex.Message.Split(new[] { '\"' }, StringSplitOptions.RemoveEmptyEntries);
+                        var duplicateName = splitMessage[1];
+                        DeleteSiteColumn(duplicateName, ctx);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
+        private static void DeleteSiteColumn(string name, ClientContext ctx)
+        {
+            var siteColumn = ctx.Web.Fields.GetByInternalNameOrTitle(name);
+            if (siteColumn == null) return;
+            siteColumn.DeleteObject();
+            ctx.ExecuteQuery();
+        }
+
+        private async static Task AddContentTypeToList(ClientContext ctx)
+        {
+            ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
+            ctx.Load(contentTypes);
+            ctx.ExecuteQuery();
+            // Give content type name over here
+            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "CSOM Test content type" select contentType).FirstOrDefault();
+
+            ctx.Load(testContentType);
             // Get list
             List testList = ctx.Web.Lists.GetByTitle("CSOM Test");
             // Add content type to list and update
@@ -223,7 +281,7 @@ namespace ConsoleCSOM
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
                 oListItem["Title"] = model.Title;
                 oListItem["about"] = model.About;
-                oListItem["citycsomtest"] = model.City;
+                oListItem["cityCSOM"] = model.City;
                 oListItem.Update();
             }
             await ctx.ExecuteQueryAsync();
