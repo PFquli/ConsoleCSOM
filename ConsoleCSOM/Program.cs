@@ -20,6 +20,8 @@ namespace ConsoleCSOM
 
     internal class Program
     {
+        private static string ListNameConst = "CSOM Test List";
+
         private static async Task Main(string[] args)
         {
             try
@@ -58,7 +60,7 @@ namespace ConsoleCSOM
             ListCreationInformation creationInfo = new ListCreationInformation();
             creationInfo.TemplateType = (int)ListTemplateType.GenericList;
             creationInfo.Description = web.Description;
-            creationInfo.Title = "CSOM Test";
+            creationInfo.Title = ListNameConst;
             try
             {
                 SP.List newList = web.Lists.Add(creationInfo);
@@ -263,7 +265,7 @@ namespace ConsoleCSOM
 
             ctx.Load(testContentType);
             // Get list
-            List testList = ctx.Web.Lists.GetByTitle("CSOM Test");
+            List testList = ctx.Web.Lists.GetByTitle(ListNameConst);
             // Add content type to list and update
             testList.ContentTypes.AddExistingContentType(testContentType);
             testList.Update();
@@ -273,9 +275,9 @@ namespace ConsoleCSOM
 
         private async static Task CreateNewListItems(ClientContext ctx)
         {
-            SP.List oList = ctx.Web.Lists.GetByTitle("CSOM Test");
+            SP.List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
 
-            Field field = ctx.Web.Fields.GetByTitle("cityCSOM");
+            Field field = oList.Fields.GetByTitle("cityCSOM");
 
             ctx.Load(field);
 
@@ -300,6 +302,10 @@ namespace ConsoleCSOM
                 oListItem.Update();
             }
             await ctx.ExecuteQueryAsync();
+        }
+
+        private async static Task UpdateAboutField(ClientContext ctx)
+        {
         }
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
