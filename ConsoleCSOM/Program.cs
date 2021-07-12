@@ -310,7 +310,7 @@ namespace ConsoleCSOM
         {
             List targetList = ctx.Web.Lists.GetByTitle(ListNameConst);
 
-            Field oField = targetList.Fields.GetByTitle("about");
+            Field oField = ctx.Web.Fields.GetByTitle("about");
 
             // Need to load field to get default value of it
             ctx.Load(oField);
