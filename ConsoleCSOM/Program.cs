@@ -43,7 +43,9 @@ namespace ConsoleCSOM
                     //await CreateContentType(ctx);
                     //await AddFieldToContentType(ctx);
                     //await AddContentTypeToList(ctx);
-                    await CreateNewListItems(ctx);
+                    //await CreateNewListItems(ctx);
+                    await UpdateDefaultValueForAboutField(ctx);
+                    await AddNewListItemsAfterUpdatingAboutDefault(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -304,8 +306,68 @@ namespace ConsoleCSOM
             await ctx.ExecuteQueryAsync();
         }
 
-        private async static Task UpdateAboutField(ClientContext ctx)
+        private async static Task UpdateDefaultValueForAboutField(ClientContext ctx)
         {
+            List targetList = ctx.Web.Lists.GetByTitle(ListNameConst);
+
+            Field oField = targetList.Fields.GetByTitle("about");
+
+            // Need to load field to get default value of it
+            ctx.Load(oField);
+
+            oField.DefaultValue = "about default";
+            oField.UpdateAndPushChanges(true);
+            await ctx.ExecuteQueryAsync();
+        }
+
+        private async static Task AddNewListItemsAfterUpdatingAboutDefault(ClientContext ctx)
+        {
+            List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
+
+            Field field = oList.Fields.GetByTitle("cityCSOM");
+
+            ctx.Load(field);
+
+            ctx.ExecuteQuery();
+
+            TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
+
+            ctx.Load(oList);
+            for (var i = 0; i < 2; i++)
+            {
+                ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
+                ListItem oListItem = oList.AddItem(itemCreateInfo);
+                oListItem["Title"] = "Title" + (i + 10);
+
+                taxField.SetFieldValueByValue(oListItem, new TaxonomyFieldValue()
+                {
+                    WssId = -1, // alway let it -1
+                    Label = "Ho Chi Minh",
+                    TermGuid = "2fca8c5f-0def-442f-8386-feb21568109b"
+                });
+                oListItem.Update();
+            }
+            await ctx.ExecuteQueryAsync();
+        }
+
+        private async static Task UpdateDefaultValueForCityField(ClientContext ctx)
+        {
+            SP.List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
+
+            Field field = oList.Fields.GetByTitle("cityCSOM");
+
+            ctx.Load(field);
+
+            ctx.ExecuteQuery();
+
+            TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
+
+            // Need to load field to get default value of it
+            ctx.Load(taxField);
+
+            taxField.DefaultValue = "about default";
+            taxField.UpdateAndPushChanges(true);
+            await ctx.ExecuteQueryAsync();
         }
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
