@@ -22,7 +22,9 @@ namespace ConsoleCSOM
     {
         private static string ListNameConst = "CSOM Test List";
 
-        private static string ContentTypeIdConst = "0x0100" + new Guid("7CDA06D1-66B4-4450-8FC3-28CD64FB2C3C").ToString("N"); // parent is Item type
+        private static string ContentTypeIdConst = "0x0100" + new Guid("33847D27-C289-47F3-AEE7-AFED960DF770").ToString("N"); // parent is Item type
+
+        private static string ContentTypeNameConst = "CSOM Test ctype";
 
         private static async Task Main(string[] args)
         {
@@ -36,7 +38,7 @@ namespace ConsoleCSOM
 
                     Console.WriteLine($"Site {ctx.Web.Title}");
 
-                    //await CreateCSOMTestList(ctx);
+                    await CreateCSOMTestList(ctx);
                     //await SimpleCamlQueryAsync(ctx);
                     //await CsomTermSetAsync(ctx);
                     //await CreateTermSetInDevTenant(ctx);
@@ -209,7 +211,7 @@ namespace ConsoleCSOM
             // Create a Content Type Information object.
             ContentTypeCreationInformation newCt = new ContentTypeCreationInformation();
             // Set the name for the content type.
-            newCt.Name = "CSOM Test content type";
+            newCt.Name = "ContentTypeNameConst";
             // Inherit from oob document - 0x0101 and assign.
             newCt.Id = ContentTypeIdConst;
             // Set content type to be available from specific group.
@@ -225,7 +227,7 @@ namespace ConsoleCSOM
             ctx.Load(contentTypes);
             ctx.ExecuteQuery();
             // Give content type name over here
-            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "CSOM Test content type" select contentType).FirstOrDefault();
+            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
 
             ctx.Load(testContentType);
             // Add site fields about and city to content type
@@ -287,7 +289,7 @@ namespace ConsoleCSOM
             ctx.Load(contentTypes);
             ctx.ExecuteQuery();
             // Give content type name over here
-            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "CSOM Test content type" select contentType).FirstOrDefault();
+            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
 
             ctx.Load(testContentType);
             // Get list
@@ -311,7 +313,7 @@ namespace ConsoleCSOM
                 ct => ct.Name,
                         ct => ct.Id));
             ctx.ExecuteQuery();
-            List<ContentTypeId> reverseOrder = (from ct in ctCol where ct.Name.Equals("CSOM Test content type", StringComparison.OrdinalIgnoreCase) select ct.Id).ToList();
+            List<ContentTypeId> reverseOrder = (from ct in ctCol where ct.Name.Equals("ContentTypeNameConst", StringComparison.OrdinalIgnoreCase) select ct.Id).ToList();
             list.RootFolder.UniqueContentTypeOrder = reverseOrder;
             list.RootFolder.Update();
             list.Update();
@@ -341,6 +343,7 @@ namespace ConsoleCSOM
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
                 oListItem["Title"] = "Title" + i;
                 oListItem["about"] = "about" + i;
+                oListItem["ContentTypeId"] = ContentTypeIdConst;
 
                 taxField.SetFieldValueByValue(oListItem, new TaxonomyFieldValue()
                 {
@@ -384,7 +387,7 @@ namespace ConsoleCSOM
             TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
 
             ctx.Load(oList);
-            for (var i = 25; i < 29; i++)
+            for (var i = 10; i < 12; i++)
             {
                 ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
@@ -456,7 +459,7 @@ namespace ConsoleCSOM
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
                 oListItem["Title"] = "Title" + i;
                 oListItem["about"] = "about" + i;
-                //oListItem["ContentTypeId"] = ContentTypeIdConst;
+                oListItem["ContentTypeId"] = ContentTypeIdConst;
                 oListItem.Update();
             }
             await ctx.ExecuteQueryAsync();
