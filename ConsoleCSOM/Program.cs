@@ -51,7 +51,8 @@ namespace ConsoleCSOM
                     //await AddNewListItemsAfterUpdatingAboutDefault(ctx);
                     //await UpdateDefaultValueForCityField(ctx);
                     //await AddNewListItemsAfterUpdatingCityDefault(ctx);
-                    await QueryListItemNotAboutDefault(ctx);
+                    //await QueryListItemNotAboutDefault(ctx);
+                    await CreateListViewWithFilters(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -383,17 +384,18 @@ namespace ConsoleCSOM
             TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
 
             ctx.Load(oList);
-            for (var i = 10; i < 12; i++)
+            for (var i = 25; i < 29; i++)
             {
                 ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
                 oListItem["Title"] = "Title" + i;
+                oListItem["ContentTypeId"] = ContentTypeIdConst;
 
                 taxField.SetFieldValueByValue(oListItem, new TaxonomyFieldValue()
                 {
                     WssId = -1, // alway let it -1
-                    Label = "Ho Chi Minh",
-                    TermGuid = "2fca8c5f-0def-442f-8386-feb21568109b"
+                    Label = "Stockholm",
+                    TermGuid = "65f5b6af-3fd0-4790-966e-2f34ef5c5504"
                 });
                 oListItem.Update();
             }
@@ -490,6 +492,66 @@ namespace ConsoleCSOM
         }
 
         #endregion 2/1
+
+        #region 2/2
+
+        private static async Task CreateListViewWithFilters(ClientContext ctx)
+        {
+            // clientcontext.Web.Lists.GetById - This option also can be used to get the list using List GUID
+            // This value is NOT List internal name
+            List targetList = ctx.Web.Lists.GetByTitle(ListNameConst);
+
+            ViewCollection viewCollection = targetList.Views;
+
+            ctx.Load(viewCollection);
+
+            ViewCreationInformation viewCreationInformation = new ViewCreationInformation();
+            viewCreationInformation.Title = "HCM Newest";
+
+            // Specify type of the view. Below are the options
+
+            // 1. none - The type of the list view is not specified
+
+            // 2. html - Sspecifies an HTML list view type
+
+            // 3. grid - Specifies a datasheet list view type
+
+            // 4. calendar- Specifies a calendar list view type
+
+            // 5. recurrence - Specifies a list view type that displays recurring events
+
+            // 6. chart - Specifies a chart list view type
+
+            // 7. gantt - Specifies a Gantt chart list view type
+
+            viewCreationInformation.ViewTypeKind = ViewType.Html;
+
+            // You can optionally specify row limit for the view
+            viewCreationInformation.RowLimit = 10;
+
+            // You can optionally specify a query as mentioned below.
+            // Create one CAML query to filter list view and mention that query below
+            viewCreationInformation.Query = "<Where><Eq><FieldRef Name = 'cityCSOM' /><Value Type = 'TaxonomyFieldType'>Ho Chi Minh</Value></Eq></Where><OrderBy><FieldRef Name='Modified' Ascending='False'/></OrderBy>";
+
+            // Add all the fields over here with comma separated value as mentioned below
+            // You can mention display name or internal name of the column
+            string CommaSeparateColumnNames = "ID,Title,cityCSOM,about";
+            viewCreationInformation.ViewFields = CommaSeparateColumnNames.Split(',');
+
+            View listView = viewCollection.Add(viewCreationInformation);
+            ctx.ExecuteQuery();
+
+            // Code to update the display name for the view.
+            listView.Title = "HCM Newest";
+
+            // You can optionally specify Aggregation: Field references for totals columns or calculated columns
+            //listView.Aggregations = "<FieldRef Name='Title' Type='COUNT'/>";
+
+            listView.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 2/2
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
