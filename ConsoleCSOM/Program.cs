@@ -45,13 +45,13 @@ namespace ConsoleCSOM
                     //await CreateContentType(ctx);
                     //await AddFieldToContentType(ctx);
                     //await AddContentTypeToList(ctx);
-                    await SetDefaultContentTypeForList(ctx);
+                    //await SetDefaultContentTypeForList(ctx);
                     //await CreateNewListItems(ctx);
                     //await UpdateDefaultValueForAboutField(ctx);
                     //await AddNewListItemsAfterUpdatingAboutDefault(ctx);
                     //await UpdateDefaultValueForCityField(ctx);
-                    await AddNewListItemsAfterUpdatingCityDefault(ctx);
-                    //await QueryListItemNotAboutDefault(ctx);
+                    //await AddNewListItemsAfterUpdatingCityDefault(ctx);
+                    await QueryListItemNotAboutDefault(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -475,16 +475,15 @@ namespace ConsoleCSOM
                                 <Query>
                                     <OrderBy><FieldRef Name='ID' Ascending='False'/></OrderBy>
                                     <Where>
-                                    <Neq>
-                                      <FieldRef Name = 'about'/>
-                                      <Value Type = 'about default' />
-                                      <XML/>
-                                    </Neq>
+                                      <Neq>
+                                        <FieldRef Name='about'></FieldRef>
+                                        <Value Type='Text'>about default</Value>
+                                      </Neq>
                                     </Where>
                                 </Query>
                                 <RowLimit>20</RowLimit>
-                            </View>",
-                //FolderServerRelativeUrl = "/sites/PrecioFishbone/CSOM Test List"
+                            </View>"
+                //FolderServerRelativeUrl = "/sites/PrecioFishbone/CSOM Test List/"
             });
             ctx.Load(items);
             await ctx.ExecuteQueryAsync();
