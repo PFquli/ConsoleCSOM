@@ -9,6 +9,8 @@ using System.Collections.Generic;
 
 using SP = Microsoft.SharePoint.Client;
 
+using OfficeDevPnP.Core.Entities;
+
 namespace ConsoleCSOM
 {
     internal class SharepointInfo
@@ -55,7 +57,9 @@ namespace ConsoleCSOM
                     //await AddNewListItemsAfterUpdatingCityDefault(ctx);
                     //await QueryListItemNotAboutDefault(ctx);
                     //await CreateListViewWithFilters(ctx);
-                    await UpdateMultipleAboutDefaultField(ctx);
+                    //await UpdateMultipleAboutDefaultField(ctx);
+                    //await CreateAuthorFieldInList(ctx);
+                    await MigrateAllListItemsAndSetAdmin(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -586,6 +590,43 @@ namespace ConsoleCSOM
         }
 
         #endregion 2/3
+
+        #region 2/4
+
+        private static async Task CreateAuthorFieldInList(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(ListNameConst);
+            FieldCollection fields = list.Fields;
+            string field = @"<Field Name='CSOMTestAuthor' DisplayName='CSOM Test Author' Type='User' Group='Custom Columns' />";
+            fields.AddFieldAsXml(field, true, AddFieldOptions.DefaultValue);
+
+            await ctx.ExecuteQueryAsync();
+        }
+
+        private static async Task MigrateAllListItemsAndSetAdmin(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(ListNameConst);
+            CamlQuery query = CamlQuery.CreateAllItemsQuery();
+            ListItemCollection listItems = list.GetItems(query);
+            ctx.Load(listItems);
+            //List<UserEntity> admins = ctx.Site.RootWeb.GetAdministrators();
+            //UserEntity admin = admins[0];
+            var currentUser = ctx.Web.CurrentUser;
+            ctx.Load(currentUser);
+            ctx.ExecuteQuery();
+            int userId = currentUser.Id;
+            Console.WriteLine(currentUser.Id.ToString(), currentUser.LoginName);
+            foreach (ListItem listItem in listItems)
+            {
+                FieldUserValue uservalue = new FieldUserValue();
+                uservalue.LookupId = userId;
+                listItem["CSOM_x0020_Test_x0020_Author"] = uservalue;
+                listItem.Update();
+            }
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 2/4
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
