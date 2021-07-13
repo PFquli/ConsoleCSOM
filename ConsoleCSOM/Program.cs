@@ -22,6 +22,8 @@ namespace ConsoleCSOM
     {
         private static string ListNameConst = "CSOM Test List";
 
+        private static string ContentTypeIdConst = "0x0100" + new Guid("7CDA06D1-66B4-4450-8FC3-28CD64FB2C3C").ToString("N"); // parent is Item type
+
         private static async Task Main(string[] args)
         {
             try
@@ -43,11 +45,13 @@ namespace ConsoleCSOM
                     //await CreateContentType(ctx);
                     //await AddFieldToContentType(ctx);
                     //await AddContentTypeToList(ctx);
+                    await SetDefaultContentTypeForList(ctx);
                     //await CreateNewListItems(ctx);
                     //await UpdateDefaultValueForAboutField(ctx);
                     //await AddNewListItemsAfterUpdatingAboutDefault(ctx);
                     //await UpdateDefaultValueForCityField(ctx);
                     await AddNewListItemsAfterUpdatingCityDefault(ctx);
+                    //await QueryListItemNotAboutDefault(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -144,14 +148,14 @@ namespace ConsoleCSOM
                 Web web = ctx.Web;
                 FieldCollection fields = web.Fields;
                 fields.AddFieldAsXml(
-                    @"<Field ID='139B1AB0-0EDC-4D4B-8B35-632CED9F3DCD' Type='Text'
+                    @"<Field                Type='Text'
                                             Name='about'
                                             Required='FALSE'
                                             DisplayName='about'
                                             Description=''
                                             Group='Custom Columns'/>", true, AddFieldOptions.DefaultValue);
                 var field = fields.AddFieldAsXml(
-                    @"<Field ID='2E660010-96AE-4CA1-895B-DE92AB67451F' Type='TaxonomyFieldType'
+                    @"<Field                Type='TaxonomyFieldType'
                                             Name='cityCSOM'
                                             Required='FALSE'
                                             DisplayName='cityCSOM'
@@ -194,11 +198,10 @@ namespace ConsoleCSOM
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
             ctx.Load(contentTypes);
             ctx.ExecuteQuery();
-            string id = "0x0100" + new Guid("7CDA06D1-66B4-4450-8FC3-28CD64FB2C3C").ToString("N"); // parent is Item type
 
             foreach (var item in contentTypes)
             {
-                if (item.StringId == id)
+                if (item.StringId == ContentTypeIdConst)
                     return;
             }
 
@@ -207,7 +210,7 @@ namespace ConsoleCSOM
             // Set the name for the content type.
             newCt.Name = "CSOM Test content type";
             // Inherit from oob document - 0x0101 and assign.
-            newCt.Id = id;
+            newCt.Id = ContentTypeIdConst;
             // Set content type to be available from specific group.
             newCt.Group = "Custom Content Types";
             // Create the content type.
@@ -299,6 +302,25 @@ namespace ConsoleCSOM
 
         #region 1/6
 
+        private static async Task SetDefaultContentTypeForList(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(ListNameConst);
+            ContentTypeCollection ctCol = list.ContentTypes;
+            ctx.Load(ctCol, coll => coll.Include(
+                ct => ct.Name,
+                        ct => ct.Id));
+            ctx.ExecuteQuery();
+            List<ContentTypeId> reverseOrder = (from ct in ctCol where ct.Name.Equals("CSOM Test content type", StringComparison.OrdinalIgnoreCase) select ct.Id).ToList();
+            list.RootFolder.UniqueContentTypeOrder = reverseOrder;
+            list.RootFolder.Update();
+            list.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 1/6
+
+        #region 1/7
+
         private async static Task CreateNewListItems(ClientContext ctx)
         {
             SP.List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
@@ -330,9 +352,9 @@ namespace ConsoleCSOM
             await ctx.ExecuteQueryAsync();
         }
 
-        #endregion 1/6
+        #endregion 1/7
 
-        #region 1/7
+        #region 1/8
 
         private async static Task UpdateDefaultValueForAboutField(ClientContext ctx)
         {
@@ -361,7 +383,7 @@ namespace ConsoleCSOM
             TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
 
             ctx.Load(oList);
-            for (var i = 10; i < 2; i++)
+            for (var i = 10; i < 12; i++)
             {
                 ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
@@ -378,14 +400,12 @@ namespace ConsoleCSOM
             await ctx.ExecuteQueryAsync();
         }
 
-        #endregion 1/7
+        #endregion 1/8
 
-        #region 1/8
+        #region 1/9
 
         private async static Task UpdateDefaultValueForCityField(ClientContext ctx)
         {
-            SP.List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
-
             Field field = ctx.Web.Fields.GetByTitle("cityCSOM");
 
             ctx.Load(field);
@@ -414,23 +434,63 @@ namespace ConsoleCSOM
             await ctx.ExecuteQueryAsync();
         }
 
+        // Todo: fix the "default value of city not showing" bug
         private async static Task AddNewListItemsAfterUpdatingCityDefault(ClientContext ctx)
         {
             List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
 
+            Field field = oList.Fields.GetByTitle("cityCSOM");
+
+            ctx.Load(field);
+
+            ctx.ExecuteQuery();
+
+            TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
+
             ctx.Load(oList);
-            for (var i = 20; i < 2; i++)
+            for (var i = 20; i < 22; i++)
             {
                 ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
                 ListItem oListItem = oList.AddItem(itemCreateInfo);
                 oListItem["Title"] = "Title" + i;
                 oListItem["about"] = "about" + i;
+                //oListItem["ContentTypeId"] = ContentTypeIdConst;
                 oListItem.Update();
             }
             await ctx.ExecuteQueryAsync();
         }
 
-        #endregion 1/8
+        #endregion 1/9
+
+        #region 2/1
+
+        private static async Task QueryListItemNotAboutDefault(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(ListNameConst);
+            var allItemsQuery = CamlQuery.CreateAllItemsQuery();
+            var allFoldersQuery = CamlQuery.CreateAllFoldersQuery();
+            var items = list.GetItems(new CamlQuery()
+            {
+                ViewXml = @"<View>
+                                <Query>
+                                    <OrderBy><FieldRef Name='ID' Ascending='False'/></OrderBy>
+                                    <Where>
+                                    <Neq>
+                                      <FieldRef Name = 'about'/>
+                                      <Value Type = 'about default' />
+                                      <XML/>
+                                    </Neq>
+                                    </Where>
+                                </Query>
+                                <RowLimit>20</RowLimit>
+                            </View>",
+                //FolderServerRelativeUrl = "/sites/PrecioFishbone/CSOM Test List"
+            });
+            ctx.Load(items);
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 2/1
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
