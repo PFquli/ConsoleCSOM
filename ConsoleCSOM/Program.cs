@@ -54,7 +54,8 @@ namespace ConsoleCSOM
                     //await UpdateDefaultValueForCityField(ctx);
                     //await AddNewListItemsAfterUpdatingCityDefault(ctx);
                     //await QueryListItemNotAboutDefault(ctx);
-                    await CreateListViewWithFilters(ctx);
+                    //await CreateListViewWithFilters(ctx);
+                    await UpdateMultipleAboutDefaultField(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -472,8 +473,6 @@ namespace ConsoleCSOM
         private static async Task QueryListItemNotAboutDefault(ClientContext ctx)
         {
             List list = ctx.Web.Lists.GetByTitle(ListNameConst);
-            var allItemsQuery = CamlQuery.CreateAllItemsQuery();
-            var allFoldersQuery = CamlQuery.CreateAllFoldersQuery();
             var items = list.GetItems(new CamlQuery()
             {
                 ViewXml = @"<View>
@@ -555,6 +554,38 @@ namespace ConsoleCSOM
         }
 
         #endregion 2/2
+
+        #region 2/3
+
+        private static async Task UpdateMultipleAboutDefaultField(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(ListNameConst);
+            var items = list.GetItems(new CamlQuery()
+            {
+                ViewXml = @"<View>
+                                <Query>
+                                    <OrderBy><FieldRef Name='ID' Ascending='False'/></OrderBy>
+                                    <Where>
+                                      <Eq>
+                                        <FieldRef Name='about'></FieldRef>
+                                        <Value Type='Text'>about default</Value>
+                                      </Eq>
+                                    </Where>
+                                </Query>
+                            </View>"
+                //FolderServerRelativeUrl = "/sites/PrecioFishbone/CSOM Test List/"
+            });
+            ctx.Load(items);
+            ctx.ExecuteQuery();
+            foreach (ListItem item in items)
+            {
+                item["about"] = "Update script";
+                item.Update();
+            }
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 2/3
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
