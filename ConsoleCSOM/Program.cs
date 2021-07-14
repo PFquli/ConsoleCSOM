@@ -69,7 +69,8 @@ namespace ConsoleCSOM
                     //await AddContentTypeToDocumentLibrary(ctx);
                     //await CreateFolderAndSubFolder(ctx);
                     //await CreateListItemsInSubFolder(ctx);
-                    await StockholmItemsInSubFolder(ctx);
+                    //await StockholmItemsInSubFolder(ctx);
+                    await UploadDocumentToDocumentLibrary(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -917,6 +918,30 @@ namespace ConsoleCSOM
         }
 
         #endregion 3/6
+
+        #region 3/7
+
+        private static async Task UploadDocumentToDocumentLibrary(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
+            ctx.Load(list.RootFolder, f => f.ServerRelativeUrl);
+            ctx.ExecuteQuery();
+            var fileCreationInfo = new FileCreationInformation
+            {
+                Content = Encoding.ASCII.GetBytes("uploading a document for testing purpose"),
+                Overwrite = true,
+                Url = $"{list.RootFolder.ServerRelativeUrl}/Document.docx"
+            };
+            File file = list.RootFolder.Files.Add(fileCreationInfo);
+            ctx.ExecuteQuery();
+            ListItem listItem = file.ListItemAllFields;
+            listItem["Title"] = "Test";
+            listItem["ContentTypeId"] = ContentTypeIdConst;
+            listItem.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 3/7
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
