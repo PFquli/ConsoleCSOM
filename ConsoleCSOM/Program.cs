@@ -66,7 +66,8 @@ namespace ConsoleCSOM
                     //await AddFieldToContentTypeAndMakeAvailableInList(ctx);
                     //await AddListItemsWithTaxonomyMultiValue(ctx);
                     //await CreateDocumentLibrary(ctx);
-                    await AddContentTypeToDocumentLibrary(ctx);
+                    //await AddContentTypeToDocumentLibrary(ctx);
+                    await CreateFolderAndSubFolder(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -798,6 +799,34 @@ namespace ConsoleCSOM
         }
 
         #endregion 3/4
+
+        #region 3/5
+
+        private static async Task CreateFolderAndSubFolder(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
+            //Enable Folder creation for the list
+            list.EnableFolderCreation = true;
+            FolderCollection folders = list.RootFolder.Folders;
+
+            ctx.Load(folders);
+            list.Update();
+            ctx.ExecuteQuery();
+
+            Folder newFolder = folders.Add("Folder 1");
+
+            newFolder.Update();
+
+            ctx.ExecuteQuery();
+
+            newFolder.Folders.Add("Folder 2");
+
+            newFolder.Update();
+
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 3/5
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
