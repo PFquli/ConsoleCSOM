@@ -26,7 +26,7 @@ namespace ConsoleCSOM
 
         private static string ContentTypeIdConst = "0x0100" + new Guid("33847D27-C289-47F3-AEE7-AFED960DF770").ToString("N"); // parent is Item type
 
-        private static string ContentTypeNameConst = "CSOM Test ctype";
+        private static string ContentTypeNameConst = "ContentTypeNameConst";
 
         private static async Task Main(string[] args)
         {
@@ -60,7 +60,9 @@ namespace ConsoleCSOM
                     //await UpdateMultipleAboutDefaultField(ctx);
                     //await CreateAuthorFieldInList(ctx);
                     //await MigrateAllListItemsAndSetAdmin(ctx);
-                    await CreateMultiTaxonomyField(ctx);
+                    //await CreateMultiTaxonomyField(ctx);
+                    //await AddFieldToContentTypeAndMakeAvailableInList(ctx);
+                    await AddListItemsWithTaxonomyMultiValue(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -677,6 +679,90 @@ namespace ConsoleCSOM
         }
 
         #endregion 3/1
+
+        #region 3/2
+
+        private static async Task AddFieldToContentTypeAndMakeAvailableInList(ClientContext ctx)
+        {
+            ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
+            ctx.Load(contentTypes);
+            ctx.ExecuteQuery();
+            // Give content type name over here
+            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
+
+            ctx.Load(testContentType);
+            // Add site fields about and city to content type
+            Field field = ctx.Web.AvailableFields.GetByInternalNameOrTitle("cities");
+
+            ctx.Load(field);
+            ctx.ExecuteQuery();
+
+            // Workaround: check for duplicate field, delete it and try adding again
+            bool success = false;
+            while (!success)
+            {
+                try
+                {
+                    FieldLinkCreationInformation fldLink = new FieldLinkCreationInformation();
+                    fldLink.Field = field;
+                    fldLink.Field.Required = false;
+
+                    testContentType.FieldLinks.Add(fldLink);
+                    testContentType.Update(true);
+
+                    await ctx.ExecuteQueryAsync();
+                    success = true;
+                }
+                catch (ServerException ex)
+                {
+                    if (ex.Message.Contains("A duplicate field name"))
+                    {
+                        var splitMessage = ex.Message.Split(new[] { '\"' }, StringSplitOptions.RemoveEmptyEntries);
+                        var duplicateName = splitMessage[1];
+                        DeleteSiteColumn(duplicateName, ctx);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+        }
+
+        #endregion 3/2
+
+        #region 3/3
+
+        private static async Task AddListItemsWithTaxonomyMultiValue(ClientContext ctx)
+        {
+            List oList = ctx.Web.Lists.GetByTitle(ListNameConst);
+
+            Field field = oList.Fields.GetByTitle("cities");
+
+            ctx.Load(field);
+
+            ctx.ExecuteQuery();
+
+            TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
+
+            ctx.Load(oList);
+            for (var i = 30; i < 33; i++)
+            {
+                ListItemCreationInformation itemCreateInfo = new ListItemCreationInformation();
+                ListItem oListItem = oList.AddItem(itemCreateInfo);
+                oListItem["Title"] = "Title" + i;
+                oListItem["ContentTypeId"] = ContentTypeIdConst;
+                TaxonomyFieldValueCollection values = new TaxonomyFieldValueCollection(ctx, string.Empty, field);
+                // PopulateFromLabelGuidPairs string: label|Guid. All WssId's will be set to -1
+                values.PopulateFromLabelGuidPairs(@"Stockholm|65f5b6af-3fd0-4790-966e-2f34ef5c5504");
+                values.PopulateFromLabelGuidPairs(@"Ho Chi Minh|2fca8c5f-0def-442f-8386-feb21568109b");
+                taxField.SetFieldValueByValueCollection(oListItem, values);
+                oListItem.Update();
+            }
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 3/3
 
         private static async Task GetFieldTermValue(ClientContext Ctx, string termId)
         {
