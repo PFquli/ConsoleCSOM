@@ -28,6 +28,8 @@ namespace ConsoleCSOM
 
         private static string ContentTypeNameConst = "ContentTypeNameConst";
 
+        private static string DocumentLibNameConst = "Document Test";
+
         private static async Task Main(string[] args)
         {
             try
@@ -62,7 +64,9 @@ namespace ConsoleCSOM
                     //await MigrateAllListItemsAndSetAdmin(ctx);
                     //await CreateMultiTaxonomyField(ctx);
                     //await AddFieldToContentTypeAndMakeAvailableInList(ctx);
-                    await AddListItemsWithTaxonomyMultiValue(ctx);
+                    //await AddListItemsWithTaxonomyMultiValue(ctx);
+                    //await CreateDocumentLibrary(ctx);
+                    await AddContentTypeToDocumentLibrary(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -631,14 +635,6 @@ namespace ConsoleCSOM
 
         #endregion 2/4
 
-        private static ClientContext GetContext(ClientContextHelper clientContextHelper)
-        {
-            var builder = new ConfigurationBuilder().AddJsonFile($"appsettings.json", true, true);
-            IConfiguration config = builder.Build();
-            var info = config.GetSection("SharepointInfo").Get<SharepointInfo>();
-            return clientContextHelper.GetContext(new Uri(info.SiteUrl), info.Username, info.Password);
-        }
-
         #region 3/1
 
         private static async Task CreateMultiTaxonomyField(ClientContext ctx)
@@ -763,6 +759,53 @@ namespace ConsoleCSOM
         }
 
         #endregion 3/3
+
+        #region 3/4
+
+        private static async Task CreateDocumentLibrary(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            ListCreationInformation creationInfo = new ListCreationInformation();
+            creationInfo.TemplateType = (int)ListTemplateType.DocumentLibrary;
+            creationInfo.Description = web.Description;
+            creationInfo.Title = DocumentLibNameConst;
+            try
+            {
+                SP.List newList = web.Lists.Add(creationInfo);
+
+                await ctx.ExecuteQueryAsync();
+            }
+            catch (Exception ex)
+            { }
+        }
+
+        private static async Task AddContentTypeToDocumentLibrary(ClientContext ctx)
+        {
+            ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
+            ctx.Load(contentTypes);
+            ctx.ExecuteQuery();
+            // Give content type name over here
+            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
+
+            ctx.Load(testContentType);
+            // Get list
+            List testDoc = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
+            // Add content type to list and update
+            testDoc.ContentTypes.AddExistingContentType(testContentType);
+            testDoc.Update();
+            ctx.Web.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 3/4
+
+        private static ClientContext GetContext(ClientContextHelper clientContextHelper)
+        {
+            var builder = new ConfigurationBuilder().AddJsonFile($"appsettings.json", true, true);
+            IConfiguration config = builder.Build();
+            var info = config.GetSection("SharepointInfo").Get<SharepointInfo>();
+            return clientContextHelper.GetContext(new Uri(info.SiteUrl), info.Username, info.Password);
+        }
 
         private static async Task GetFieldTermValue(ClientContext Ctx, string termId)
         {
