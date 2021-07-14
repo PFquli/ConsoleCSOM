@@ -59,7 +59,8 @@ namespace ConsoleCSOM
                     //await CreateListViewWithFilters(ctx);
                     //await UpdateMultipleAboutDefaultField(ctx);
                     //await CreateAuthorFieldInList(ctx);
-                    await MigrateAllListItemsAndSetAdmin(ctx);
+                    //await MigrateAllListItemsAndSetAdmin(ctx);
+                    await CreateMultiTaxonomyField(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -635,6 +636,47 @@ namespace ConsoleCSOM
             var info = config.GetSection("SharepointInfo").Get<SharepointInfo>();
             return clientContextHelper.GetContext(new Uri(info.SiteUrl), info.Username, info.Password);
         }
+
+        #region 3/1
+
+        private static async Task CreateMultiTaxonomyField(ClientContext ctx)
+        {
+            FieldCollection fields = ctx.Web.Fields;
+            var field = fields.AddFieldAsXml(
+                                        @"<Field
+                                            Type='TaxonomyFieldTypeMulti'
+                                            Name='cities'
+                                            Required='FALSE'
+                                            DisplayName='cities'
+                                            Description=''
+                                            Hidden='FALSE'
+                                            EnforceUniqueValues='FALSE'
+                                            Group ='Custom Columns'/>", true, AddFieldOptions.DefaultValue);
+            TaxonomyField taxonomyField = ctx.CastTo<TaxonomyField>(field);
+            TaxonomySession session = TaxonomySession.GetTaxonomySession(ctx);
+            TermStore termStore = session.GetDefaultSiteCollectionTermStore();
+
+            // Get the term group by Name
+            TermGroup termGroup = termStore.Groups.GetByName("Training");
+            // Get the term set by Name
+            TermSet termSet = termGroup.TermSets.GetByName("city-Quoc");
+
+            ctx.Load(termSet, tst => tst.Id);
+            ctx.Load(termStore, ts => ts.Id);
+            ctx.ExecuteQuery();
+
+            var termStoreId = termStore.Id;
+            var termSetId = termSet.Id;
+            taxonomyField.SspId = termStoreId;
+            taxonomyField.TermSetId = termSetId;
+            taxonomyField.TargetTemplate = String.Empty;
+            taxonomyField.AnchorId = Guid.Empty;
+            taxonomyField.AllowMultipleValues = true;
+            taxonomyField.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 3/1
 
         private static async Task GetFieldTermValue(ClientContext Ctx, string termId)
         {
