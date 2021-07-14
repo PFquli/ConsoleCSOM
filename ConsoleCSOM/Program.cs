@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 using SP = Microsoft.SharePoint.Client;
 
-using OfficeDevPnP.Core.Entities;
+using System.Text;
 
 namespace ConsoleCSOM
 {
@@ -42,7 +42,7 @@ namespace ConsoleCSOM
 
                     Console.WriteLine($"Site {ctx.Web.Title}");
 
-                    await CreateCSOMTestList(ctx);
+                    //await CreateCSOMTestList(ctx);
                     //await SimpleCamlQueryAsync(ctx);
                     //await CsomTermSetAsync(ctx);
                     //await CreateTermSetInDevTenant(ctx);
@@ -67,7 +67,8 @@ namespace ConsoleCSOM
                     //await AddListItemsWithTaxonomyMultiValue(ctx);
                     //await CreateDocumentLibrary(ctx);
                     //await AddContentTypeToDocumentLibrary(ctx);
-                    await CreateFolderAndSubFolder(ctx);
+                    //await CreateFolderAndSubFolder(ctx);
+                    await CreateListItemsInSubFolder(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -823,6 +824,61 @@ namespace ConsoleCSOM
 
             newFolder.Update();
 
+            await ctx.ExecuteQueryAsync();
+        }
+
+        private static async Task CreateListItemsInSubFolder(ClientContext ctx)
+        {
+            List oList = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
+            ctx.Load(oList.RootFolder, f => f.ServerRelativeUrl);
+            ctx.ExecuteQuery();
+            string siteUrl = ctx.Web.ServerRelativeUrl;
+            string targetFolderPath = "Folder 1/Folder 2";
+            string targetUrl = $"{oList.RootFolder.ServerRelativeUrl}/{targetFolderPath}";
+
+            for (var i = 40; i < 43; i++)
+            {
+                var fileCreationInfo = new FileCreationInformation
+                {
+                    Content = Encoding.ASCII.GetBytes("test"),
+                    Url = $"{targetUrl}/test{i}.txt"
+                };
+                File file = oList.RootFolder.Files.Add(fileCreationInfo);
+                ctx.ExecuteQuery();
+                ListItem oListItem = file.ListItemAllFields;
+                oListItem["Title"] = "Title" + i;
+                oListItem["ContentTypeId"] = ContentTypeIdConst;
+                oListItem["about"] = "Folder test";
+                oListItem.Update();
+            }
+            Field field = oList.Fields.GetByTitle("cities");
+
+            ctx.Load(field);
+
+            ctx.ExecuteQuery();
+
+            TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
+
+            for (var i = 43; i < 45; i++)
+            {
+                var fileCreationInfo = new FileCreationInformation
+                {
+                    Content = Encoding.ASCII.GetBytes("test"),
+                    Url = $"{targetUrl}/test{i}.txt"
+                };
+                File file = oList.RootFolder.Files.Add(fileCreationInfo);
+                ctx.ExecuteQuery();
+                ListItem oListItem = file.ListItemAllFields;
+                oListItem["Title"] = "Title" + i;
+                oListItem["ContentTypeId"] = ContentTypeIdConst;
+                taxField.SetFieldValueByValue(oListItem, new TaxonomyFieldValue()
+                {
+                    WssId = -1, // alway let it -1
+                    Label = "Stockholm",
+                    TermGuid = "65f5b6af-3fd0-4790-966e-2f34ef5c5504"
+                });
+                oListItem.Update();
+            }
             await ctx.ExecuteQueryAsync();
         }
 
