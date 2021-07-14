@@ -68,7 +68,8 @@ namespace ConsoleCSOM
                     //await CreateDocumentLibrary(ctx);
                     //await AddContentTypeToDocumentLibrary(ctx);
                     //await CreateFolderAndSubFolder(ctx);
-                    await CreateListItemsInSubFolder(ctx);
+                    //await CreateListItemsInSubFolder(ctx);
+                    await StockholmItemsInSubFolder(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -832,7 +833,6 @@ namespace ConsoleCSOM
             List oList = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
             ctx.Load(oList.RootFolder, f => f.ServerRelativeUrl);
             ctx.ExecuteQuery();
-            string siteUrl = ctx.Web.ServerRelativeUrl;
             string targetFolderPath = "Folder 1/Folder 2";
             string targetUrl = $"{oList.RootFolder.ServerRelativeUrl}/{targetFolderPath}";
 
@@ -883,6 +883,40 @@ namespace ConsoleCSOM
         }
 
         #endregion 3/5
+
+        #region 3/6
+
+        private static async Task StockholmItemsInSubFolder(ClientContext ctx)
+        {
+            List list = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
+            ctx.Load(list.RootFolder, f => f.ServerRelativeUrl);
+            ctx.ExecuteQuery();
+            string targetFolderPath = "Folder 1/Folder 2";
+            string targetUrl = $"{list.RootFolder.ServerRelativeUrl}/{targetFolderPath}";
+            var items = list.GetItems(new CamlQuery()
+            {
+                ViewXml = @"<View>
+                                <Query>
+                                    <OrderBy><FieldRef Name='Modified' Ascending='False'/></OrderBy>
+                                    <Where>
+                                        <Eq>
+                                            <FieldRef Name = 'cities' />
+                                            <Value Type = 'TaxonomyFieldTypeMulti'>Stockholm</Value>
+                                        </Eq>
+                                    </Where>
+                                </Query>
+                                <RowLimit>20</RowLimit>
+                            </View>",
+                FolderServerRelativeUrl = targetUrl
+            });
+
+            ctx.Load(items);
+
+            ctx.ExecuteQuery();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 3/6
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
