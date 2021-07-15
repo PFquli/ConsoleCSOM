@@ -30,6 +30,8 @@ namespace ConsoleCSOM
 
         private static string DocumentLibNameConst = "Document Test";
 
+        private static string UserEmailConst = "admin@mystartpoint.onmicrosoft.com";
+
         private static async Task Main(string[] args)
         {
             try
@@ -58,10 +60,10 @@ namespace ConsoleCSOM
                     //await UpdateDefaultValueForCityField(ctx);
                     //await AddNewListItemsAfterUpdatingCityDefault(ctx);
                     //await QueryListItemNotAboutDefault(ctx);
-                    await CreateListViewWithFilters(ctx);
+                    //await CreateListViewWithFilters(ctx);
                     //await UpdateMultipleAboutDefaultField(ctx);
                     //await CreateAuthorFieldInList(ctx);
-                    //await MigrateAllListItemsAndSetAdmin(ctx);
+                    await MigrateAllListItemsAndSetAdmin(ctx);
                     //await CreateMultiTaxonomyField(ctx);
                     //await AddFieldToContentTypeAndMakeAvailableInList(ctx);
                     //await AddListItemsWithTaxonomyMultiValue(ctx);
@@ -622,7 +624,7 @@ namespace ConsoleCSOM
             ctx.Load(listItems);
             //List<UserEntity> admins = ctx.Site.RootWeb.GetAdministrators();
             //UserEntity admin = admins[0];
-            var currentUser = ctx.Web.CurrentUser;
+            var currentUser = ctx.Web.EnsureUser(UserEmailConst);
             ctx.Load(currentUser, cu => cu.Id);
             ctx.ExecuteQuery();
             int userId = currentUser.Id;
@@ -783,12 +785,10 @@ namespace ConsoleCSOM
         private static async Task AddContentTypeToDocumentLibrary(ClientContext ctx)
         {
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
-            ctx.Load(contentTypes);
+            var query = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType);
+            var results = ctx.LoadQuery(query);
             ctx.ExecuteQuery();
-            // Give content type name over here
-            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
-
-            ctx.Load(testContentType);
+            ContentType testContentType = (ContentType)results.FirstOrDefault();
             // Get list
             List testDoc = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
             // Add content type to list and update
@@ -909,8 +909,6 @@ namespace ConsoleCSOM
             });
 
             ctx.Load(items);
-
-            ctx.ExecuteQuery();
             await ctx.ExecuteQueryAsync();
         }
 
