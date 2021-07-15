@@ -623,10 +623,9 @@ namespace ConsoleCSOM
             //List<UserEntity> admins = ctx.Site.RootWeb.GetAdministrators();
             //UserEntity admin = admins[0];
             var currentUser = ctx.Web.CurrentUser;
-            ctx.Load(currentUser);
+            ctx.Load(currentUser, cu => cu.Id);
             ctx.ExecuteQuery();
             int userId = currentUser.Id;
-            Console.WriteLine(currentUser.Id.ToString(), currentUser.LoginName);
             foreach (ListItem listItem in listItems)
             {
                 FieldUserValue uservalue = new FieldUserValue();
