@@ -49,11 +49,11 @@ namespace ConsoleCSOM
                     //await CreateNewTerms(ctx);
                     //await CreateSiteFields(ctx);
                     //await CreateContentType(ctx);
-                    await AddFieldToContentType(ctx);
+                    //await AddFieldToContentType(ctx);
                     //await AddContentTypeToList(ctx);
                     //await SetDefaultContentTypeForList(ctx);
                     //await CreateNewListItems(ctx);
-                    //await UpdateDefaultValueForAboutField(ctx);
+                    await UpdateDefaultValueForAboutField(ctx);
                     //await AddNewListItemsAfterUpdatingAboutDefault(ctx);
                     //await UpdateDefaultValueForCityField(ctx);
                     //await AddNewListItemsAfterUpdatingCityDefault(ctx);
@@ -301,12 +301,10 @@ namespace ConsoleCSOM
         private async static Task AddContentTypeToList(ClientContext ctx)
         {
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
-            ctx.Load(contentTypes);
+            var query = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType);
+            var results = ctx.LoadQuery(query);
             ctx.ExecuteQuery();
-            // Give content type name over here
-            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
-
-            ctx.Load(testContentType);
+            ContentType testContentType = (ContentType)results.FirstOrDefault();
             // Get list
             List testList = ctx.Web.Lists.GetByTitle(ListNameConst);
             // Add content type to list and update
@@ -382,7 +380,7 @@ namespace ConsoleCSOM
             Field oField = ctx.Web.Fields.GetByTitle("about");
 
             // Need to load field to get default value of it
-            ctx.Load(oField);
+            //ctx.Load(oField);
 
             oField.DefaultValue = "about default";
             oField.UpdateAndPushChanges(true);
@@ -433,9 +431,6 @@ namespace ConsoleCSOM
             ctx.ExecuteQuery();
 
             TaxonomyField taxField = ctx.CastTo<TaxonomyField>(field);
-
-            ctx.Load(taxField, t => t.DefaultValue);
-            ctx.ExecuteQuery(); // Get the Taxonomy Field
 
             TaxonomyFieldValue defaultValue = new TaxonomyFieldValue();
             defaultValue.WssId = -1;
