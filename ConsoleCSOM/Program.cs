@@ -49,7 +49,7 @@ namespace ConsoleCSOM
                     //await CreateNewTerms(ctx);
                     //await CreateSiteFields(ctx);
                     //await CreateContentType(ctx);
-                    //await AddFieldToContentType(ctx);
+                    await AddFieldToContentType(ctx);
                     //await AddContentTypeToList(ctx);
                     //await SetDefaultContentTypeForList(ctx);
                     //await CreateNewListItems(ctx);
@@ -70,7 +70,7 @@ namespace ConsoleCSOM
                     //await CreateFolderAndSubFolder(ctx);
                     //await CreateListItemsInSubFolder(ctx);
                     //await StockholmItemsInSubFolder(ctx);
-                    await UploadDocumentToDocumentLibrary(ctx);
+                    //await UploadDocumentToDocumentLibrary(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -240,12 +240,11 @@ namespace ConsoleCSOM
         private async static Task AddFieldToContentType(ClientContext ctx)
         {
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
-            ctx.Load(contentTypes);
+            var query = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType);
+            var results = ctx.LoadQuery(query);
             ctx.ExecuteQuery();
-            // Give content type name over here
-            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
+            ContentType testContentType = (ContentType)results.FirstOrDefault();
 
-            ctx.Load(testContentType);
             // Add site fields about and city to content type
             Field targetField0 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("about");
             Field targetField1 = ctx.Web.AvailableFields.GetByInternalNameOrTitle("cityCSOM");
