@@ -53,12 +53,12 @@ namespace ConsoleCSOM
                     //await AddContentTypeToList(ctx);
                     //await SetDefaultContentTypeForList(ctx);
                     //await CreateNewListItems(ctx);
-                    await UpdateDefaultValueForAboutField(ctx);
+                    //await UpdateDefaultValueForAboutField(ctx);
                     //await AddNewListItemsAfterUpdatingAboutDefault(ctx);
                     //await UpdateDefaultValueForCityField(ctx);
                     //await AddNewListItemsAfterUpdatingCityDefault(ctx);
                     //await QueryListItemNotAboutDefault(ctx);
-                    //await CreateListViewWithFilters(ctx);
+                    await CreateListViewWithFilters(ctx);
                     //await UpdateMultipleAboutDefaultField(ctx);
                     //await CreateAuthorFieldInList(ctx);
                     //await MigrateAllListItemsAndSetAdmin(ctx);
@@ -514,8 +514,6 @@ namespace ConsoleCSOM
 
             ViewCollection viewCollection = targetList.Views;
 
-            ctx.Load(viewCollection);
-
             ViewCreationInformation viewCreationInformation = new ViewCreationInformation();
             viewCreationInformation.Title = "HCM Newest";
 
@@ -586,12 +584,20 @@ namespace ConsoleCSOM
             });
             ctx.Load(items);
             ctx.ExecuteQuery();
+            int updateTracker = 0;
             foreach (ListItem item in items)
             {
                 item["about"] = "Update script";
                 item.Update();
+                updateTracker++;
+                if (updateTracker > 1)
+                {
+                    await ctx.ExecuteQueryAsync();
+                    updateTracker = 0;
+                }
             }
-            await ctx.ExecuteQueryAsync();
+            if (updateTracker > 0)
+                await ctx.ExecuteQueryAsync();
         }
 
         #endregion 2/3
