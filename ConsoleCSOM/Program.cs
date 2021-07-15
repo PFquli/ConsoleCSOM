@@ -684,12 +684,10 @@ namespace ConsoleCSOM
         private static async Task AddFieldToContentTypeAndMakeAvailableInList(ClientContext ctx)
         {
             ContentTypeCollection contentTypes = ctx.Web.ContentTypes;
-            ctx.Load(contentTypes);
+            var query = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType);
+            var results = ctx.LoadQuery(query);
             ctx.ExecuteQuery();
-            // Give content type name over here
-            ContentType testContentType = (from contentType in contentTypes where contentType.Name == "ContentTypeNameConst" select contentType).FirstOrDefault();
-
-            ctx.Load(testContentType);
+            ContentType testContentType = (ContentType)results.FirstOrDefault();
             // Add site fields about and city to content type
             Field field = ctx.Web.AvailableFields.GetByInternalNameOrTitle("cities");
 
