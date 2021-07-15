@@ -923,16 +923,16 @@ namespace ConsoleCSOM
 
         private static async Task UploadDocumentToDocumentLibrary(ClientContext ctx)
         {
+            string filePath = @"C:\Document.docx";
             List list = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
             ctx.Load(list.RootFolder, f => f.ServerRelativeUrl);
             ctx.ExecuteQuery();
-            var fileCreationInfo = new FileCreationInformation
-            {
-                Content = Encoding.ASCII.GetBytes("uploading a document for testing purpose"),
-                Overwrite = true,
-                Url = $"{list.RootFolder.ServerRelativeUrl}/Document.docx"
-            };
-            File file = list.RootFolder.Files.Add(fileCreationInfo);
+            var fileCreationInfo = new FileCreationInformation();
+            byte[] FileContent = System.IO.File.ReadAllBytes(filePath);
+            fileCreationInfo.ContentStream = new System.IO.MemoryStream(FileContent);
+            fileCreationInfo.Overwrite = true;
+            fileCreationInfo.Url = $"{list.RootFolder.ServerRelativeUrl}/Document.docx";
+            SP.File file = list.RootFolder.Files.Add(fileCreationInfo);
             ctx.ExecuteQuery();
             ListItem listItem = file.ListItemAllFields;
             listItem["Title"] = "Test";
