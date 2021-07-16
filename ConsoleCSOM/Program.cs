@@ -63,7 +63,7 @@ namespace ConsoleCSOM
                     //await CreateListViewWithFilters(ctx);
                     //await UpdateMultipleAboutDefaultField(ctx);
                     //await CreateAuthorFieldInList(ctx);
-                    await MigrateAllListItemsAndSetAdmin(ctx);
+                    //await MigrateAllListItemsAndSetAdmin(ctx);
                     //await CreateMultiTaxonomyField(ctx);
                     //await AddFieldToContentTypeAndMakeAvailableInList(ctx);
                     //await AddListItemsWithTaxonomyMultiValue(ctx);
@@ -73,6 +73,7 @@ namespace ConsoleCSOM
                     //await CreateListItemsInSubFolder(ctx);
                     //await StockholmItemsInSubFolder(ctx);
                     //await UploadDocumentToDocumentLibrary(ctx);
+                    await CreateFolderViewAndSetDefaultView(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -937,6 +938,64 @@ namespace ConsoleCSOM
         }
 
         #endregion 3/7
+
+        #region 4/1
+
+        private static async Task CreateFolderViewAndSetDefaultView(ClientContext ctx)
+        {
+            List targetList = ctx.Web.Lists.GetByTitle(DocumentLibNameConst);
+            ViewCollection viewCollection = targetList.Views;
+
+            ViewCreationInformation viewCreationInformation = new ViewCreationInformation();
+            viewCreationInformation.Title = "Folders";
+
+            // Specify type of the view. Below are the options
+
+            // 1. none - The type of the list view is not specified
+
+            // 2. html - Sspecifies an HTML list view type
+
+            // 3. grid - Specifies a datasheet list view type
+
+            // 4. calendar- Specifies a calendar list view type
+
+            // 5. recurrence - Specifies a list view type that displays recurring events
+
+            // 6. chart - Specifies a chart list view type
+
+            // 7. gantt - Specifies a Gantt chart list view type
+
+            viewCreationInformation.ViewTypeKind = ViewType.Html;
+
+            // You can optionally specify row limit for the view
+            viewCreationInformation.RowLimit = 20;
+
+            // You can optionally specify a query as mentioned below.
+            // Create one CAML query to filter list view and mention that query below
+            viewCreationInformation.Query = "<Where><Eq><FieldRef Name = 'FSObjType' /><Value Type = 'Int'>1</Value></Eq></Where><OrderBy><FieldRef Name='Modified' Ascending='False'/></OrderBy>";
+
+            // Add all the fields over here with comma separated value as mentioned below
+            // You can mention display name or internal name of the column
+            string CommaSeparateColumnNames = "Type,Name,Modified,Modified By,about,cities,cityCSOM";
+            viewCreationInformation.ViewFields = CommaSeparateColumnNames.Split(',');
+
+            View listView = viewCollection.Add(viewCreationInformation);
+            ctx.ExecuteQuery();
+
+            // Code to update the display name for the view.
+            listView.Title = "Folders";
+
+            // Set default view
+            listView.DefaultView = true;
+
+            // You can optionally specify Aggregation: Field references for totals columns or calculated columns
+            //listView.Aggregations = "<FieldRef Name='Title' Type='COUNT'/>";
+
+            listView.Update();
+            await ctx.ExecuteQueryAsync();
+        }
+
+        #endregion 4/1
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
