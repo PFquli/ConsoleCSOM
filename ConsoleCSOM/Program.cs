@@ -73,7 +73,8 @@ namespace ConsoleCSOM
                     //await CreateListItemsInSubFolder(ctx);
                     //await StockholmItemsInSubFolder(ctx);
                     //await UploadDocumentToDocumentLibrary(ctx);
-                    await CreateFolderViewAndSetDefaultView(ctx);
+                    //await CreateFolderViewAndSetDefaultView(ctx);
+                    var user = LoadUserFromEmailOrUserName(ctx, "admin@mystartpoint.onmicrosoft.com");
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -996,6 +997,18 @@ namespace ConsoleCSOM
         }
 
         #endregion 4/1
+
+        #region 4/2
+
+        private static User LoadUserFromEmailOrUserName(ClientContext ctx, string username)
+        {
+            User result = ctx.Web.EnsureUser(username);
+            ctx.Load(result);
+            ctx.ExecuteQuery();
+            return result;
+        }
+
+        #endregion 4/2
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
