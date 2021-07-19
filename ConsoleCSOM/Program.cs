@@ -74,7 +74,10 @@ namespace ConsoleCSOM
                     //await StockholmItemsInSubFolder(ctx);
                     //await UploadDocumentToDocumentLibrary(ctx);
                     //await CreateFolderViewAndSetDefaultView(ctx);
-                    var user = LoadUserFromEmailOrUserName(ctx, "admin@mystartpoint.onmicrosoft.com");
+                    //var user = LoadUserFromEmailOrUserName(ctx, "admin@mystartpoint.onmicrosoft.com");
+                    CreateTestLevelPermissionLevel(ctx);
+                    //DeleteGroupFromSite(ctx);
+                    CreateTestGroupWithTestLevelAndAddUser(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -84,6 +87,8 @@ namespace ConsoleCSOM
             {
             }
         }
+
+        #region CSOM & CAML Training
 
         #region 1/1
 
@@ -1009,6 +1014,123 @@ namespace ConsoleCSOM
         }
 
         #endregion 4/2
+
+        #endregion CSOM & CAML Training
+
+        #region Permission Training
+
+        #region Bb1
+
+        private static Web LoadSubsite(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            WebCollection webs = web.Webs;
+            var query = from subweb in webs where subweb.Title == "Finance and Accounting" select subweb;
+            var result = ctx.LoadQuery(query);
+            ctx.ExecuteQuery();
+            return result.FirstOrDefault();
+        }
+
+        private static void BreakRoleInheritanceForSite(ClientContext ctx)
+        {
+            Web web = LoadSubsite(ctx);
+            web.BreakRoleInheritance(true, false);
+            ctx.Load(web);
+            ctx.ExecuteQuery();
+        }
+
+        /// <summary>
+        /// A.K.A restore inheritance
+        /// </summary>
+        /// <param name="ctx">
+        /// ClientContext
+        /// </param>
+        private static void DeleteUniquePermissions(ClientContext ctx)
+        {
+            Web web = LoadSubsite(ctx);
+            web.ResetRoleInheritance();
+            ctx.Load(web);
+            ctx.ExecuteQuery();
+        }
+
+        // Todo: check default permission level/security group for new user
+
+        #endregion Bb1
+
+        #region Bb2
+
+        private static void CreateTestLevelPermissionLevel(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            BasePermissions basePermissions = new BasePermissions();
+            // requested permissions
+            basePermissions.Set(PermissionKind.ManageLists);
+            basePermissions.Set(PermissionKind.CreateAlerts);
+            // associated permissions
+            basePermissions.Set(PermissionKind.ViewPages);
+            basePermissions.Set(PermissionKind.ViewListItems);
+            basePermissions.Set(PermissionKind.Open);
+            RoleDefinitionCreationInformation roleDefinitionCreationInfo = new RoleDefinitionCreationInformation();
+            roleDefinitionCreationInfo.BasePermissions = basePermissions;
+            roleDefinitionCreationInfo.Name = "Test Level";
+            roleDefinitionCreationInfo.Description = "Testing permission level with manage lists and create alerts.";
+            RoleDefinition roleDefinition = ctx.Web.RoleDefinitions.Add(roleDefinitionCreationInfo);
+            ctx.ExecuteQuery();
+        }
+
+        #endregion Bb2
+
+        #region Bb4
+
+        private static Group CreateTestGroupAndAddUser(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            GroupCreationInformation groupCI = new GroupCreationInformation();
+            groupCI.Title = "Test Group";
+            groupCI.Description = "Testing group for Test Level permission level";
+            Group group = web.SiteGroups.Add(groupCI);
+            group.Owner = web.EnsureUser("admin@mystartpoint.onmicrosoft.com");
+            group.Users.AddUser(web.EnsureUser("quoc.lien.hiep@preciofishbone.se"));
+            group.Update();
+            ctx.ExecuteQuery();
+            return group;
+        }
+
+        private static void CreateTestGroupWithTestLevelAndAddUser(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            ctx.Load(web, w => w.RoleDefinitions);
+            ctx.ExecuteQuery();
+            RoleDefinitionCollection roleDefinitions = web.RoleDefinitions;
+            RoleDefinition testLevel = roleDefinitions.GetByName("Test Level");
+            ctx.Load(testLevel);
+            ctx.ExecuteQuery();
+            web.RoleAssignments.Add(CreateTestGroupAndAddUser(ctx), new RoleDefinitionBindingCollection(ctx) { testLevel });
+            ctx.ExecuteQuery();
+        }
+
+        private static void DeleteGroupFromSite(ClientContext ctx)
+        {
+            try
+            {
+                Group oGroup = ctx.Web.SiteGroups.GetByName("Test Group");
+
+                // Load the group
+                ctx.Load(oGroup);
+                ctx.ExecuteQuery();
+
+                // Remove group
+                ctx.Web.SiteGroups.Remove(oGroup);
+                ctx.ExecuteQuery();
+            }
+            catch (Exception e)
+            {
+            }
+        }
+
+        #endregion Bb4
+
+        #endregion Permission Training
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
