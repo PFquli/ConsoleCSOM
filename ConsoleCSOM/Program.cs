@@ -78,7 +78,7 @@ namespace ConsoleCSOM
                     //CreateTestLevelPermissionLevel(ctx);
                     //DeleteGroupFromSite(ctx);
                     //CreateTestGroupWithTestLevelAndAddUser(ctx);
-                    GetGroupDefaultWhenAddingNewUser(ctx);
+                    GetInheritedGroupFromSubsite(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -1148,6 +1148,42 @@ namespace ConsoleCSOM
         }
 
         #endregion Bb4
+
+        #region Bb5
+
+        private static void GetInheritedGroupFromSubsite(ClientContext ctx)
+        {
+            Web subsite = LoadSubsite(ctx);
+            GroupCollection groups = subsite.SiteGroups;
+            var query = from g in groups where g.Title == "Test Group" select g;
+            var result = ctx.LoadQuery(query);
+            ctx.ExecuteQuery();
+            Group group = result.FirstOrDefault();
+            if (group != null)
+            {
+                RoleAssignmentCollection roleAssignments = subsite.RoleAssignments;
+                ctx.Load(subsite, w => w.RoleAssignments.Where(ra => ra.Member.LoginName == group.LoginName));
+                ctx.ExecuteQuery();
+                String level = "";
+                foreach (var ra in roleAssignments)
+                {
+                    ctx.Load(ra.Member);
+                    ctx.Load(ra.RoleDefinitionBindings);
+                    ctx.ExecuteQuery();
+                    RoleDefinition? definition = ra.RoleDefinitionBindings.FirstOrDefault(rd => rd.Name == "Test Level");
+                    if (definition != null)
+                    {
+                        level = definition.Name;
+                    }
+                }
+                if (level != "")
+                {
+                    Console.WriteLine($"Found a inherited group named {group.Title} with permission level {level}");
+                }
+            }
+        }
+
+        #endregion Bb5
 
         #endregion Permission Training
 
