@@ -75,9 +75,10 @@ namespace ConsoleCSOM
                     //await UploadDocumentToDocumentLibrary(ctx);
                     //await CreateFolderViewAndSetDefaultView(ctx);
                     //var user = LoadUserFromEmailOrUserName(ctx, "admin@mystartpoint.onmicrosoft.com");
-                    CreateTestLevelPermissionLevel(ctx);
+                    //CreateTestLevelPermissionLevel(ctx);
                     //DeleteGroupFromSite(ctx);
-                    CreateTestGroupWithTestLevelAndAddUser(ctx);
+                    //CreateTestGroupWithTestLevelAndAddUser(ctx);
+                    GetGroupDefaultWhenAddingNewUser(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -1053,7 +1054,19 @@ namespace ConsoleCSOM
             ctx.ExecuteQuery();
         }
 
-        // Todo: check default permission level/security group for new user
+        private static void GetGroupDefaultWhenAddingNewUser(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            ctx.Load(web, w => w.AssociatedMemberGroup, w => w.Title);
+
+            ctx.ExecuteQuery();
+
+            Console.WriteLine("AssociatedMemberGroup is the default group for new users \"" + web.Title + "\"");
+
+            Console.WriteLine("*************************************************");
+
+            Console.WriteLine("AssociatedMemberGroup in this site is: " + web.AssociatedMemberGroup.Title);
+        }
 
         #endregion Bb1
 
@@ -1079,6 +1092,12 @@ namespace ConsoleCSOM
         }
 
         #endregion Bb2
+
+        #region Bb3
+
+        // This task is just examine how to add a new user to a existing group on UI
+
+        #endregion Bb3
 
         #region Bb4
 
