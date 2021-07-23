@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.SharePoint.Client.Taxonomy;
 using System.Collections.Generic;
+using Microsoft.SharePoint.Client.UserProfiles;
 
 using SP = Microsoft.SharePoint.Client;
 
@@ -1186,6 +1187,19 @@ namespace ConsoleCSOM
         #endregion Bb5
 
         #endregion Permission Training
+
+        #region User Profile Training
+
+        private static void UpdateTestBoolPropertyInUserProfile(ClientContext ctx)
+        {
+            Web web = ctx.Web;
+            User user = web.EnsureUser("quoc.lien.hiep@preciofishbone.se");
+            ctx.Load(user);
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            // Todo: continue with User Profile updating using CSOM
+        }
+
+        #endregion User Profile Training
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
