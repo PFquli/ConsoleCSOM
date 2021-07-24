@@ -79,7 +79,8 @@ namespace ConsoleCSOM
                     //CreateTestLevelPermissionLevel(ctx);
                     //DeleteGroupFromSite(ctx);
                     //CreateTestGroupWithTestLevelAndAddUser(ctx);
-                    GetInheritedGroupFromSubsite(ctx);
+                    //GetInheritedGroupFromSubsite(ctx);
+                    Search(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -1200,6 +1201,16 @@ namespace ConsoleCSOM
         }
 
         #endregion User Profile Training
+
+        #region Search Training
+
+        private static void Search(ClientContext ctx)
+        {
+            QueryHandler queryHandler = new QueryHandler(ctx);
+            queryHandler.PerformSingleSearch("RefinableString00:Kevin");
+        }
+
+        #endregion Search Training
 
         private static ClientContext GetContext(ClientContextHelper clientContextHelper)
         {
