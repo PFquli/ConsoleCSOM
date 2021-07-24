@@ -11,29 +11,50 @@ namespace ConsoleCSOM
 {
     internal class QueryHandler
     {
-        private ManagedProperty firstName, bookGenre, bookCategory, isMember, groupLeaders, groupMonitors, returnDate, borrowEndDate, borrowedBookQuantity;
-        private ManagedProperty userText, userEmail, userBool, userPerson, userSingleTaxonomy, userMultipleTaxonomy;
+        private ManagedProperty[] arrayOfManagedProperties { get; set; }
         private readonly Microsoft.SharePoint.Client.ClientContext ctx;
 
         public QueryHandler(ClientContext ctx)
         {
-            firstName = new ManagedProperty("First Name", "RefinableString00");
-            bookGenre = new ManagedProperty("Book Genre", "RefinableString01");
-            bookCategory = new ManagedProperty("Book Category", "RefinableString01");
-            isMember = new ManagedProperty("Is Member", "RefinableString02");
-            groupLeaders = new ManagedProperty("Group Leaders", "RefinableString03");
-            groupMonitors = new ManagedProperty("Group Monitors", "RefinableString03");
-            returnDate = new ManagedProperty("Return Date", "RefinableDate00");
-            borrowEndDate = new ManagedProperty("Borrow End Date", "RefinableDate00");
-            borrowedBookQuantity = new ManagedProperty("Borrowed Book Quantity", "RefinableInt00");
+            arrayOfManagedProperties = new ManagedProperty[]
+            {
+            new ManagedProperty("First Name", "RefinableString00"),
+            new ManagedProperty("Book Genre", "RefinableString01"),
+            new ManagedProperty("Book Category", "RefinableString01"),
+            new ManagedProperty("Is Member", "RefinableString02"),
+            new ManagedProperty("Group Leaders", "RefinableString03"),
+            new ManagedProperty("Group Monitors", "RefinableString03"),
+            new ManagedProperty("Return Date", "RefinableDate00"),
+            new ManagedProperty("Borrow End Date", "RefinableDate00"),
+            new ManagedProperty("Borrowed Book Quantity", "RefinableInt00"),
 
-            userText = new ManagedProperty("User Custom Text", "RefinableString04");
-            userEmail = new ManagedProperty("User Custom Email", "RefinableString05");
-            userBool = new ManagedProperty("User Custom Boolean", "RefinableString06");
-            userPerson = new ManagedProperty("User Custom Person", "RefinableString07");
-            userSingleTaxonomy = new ManagedProperty("User Custom Single Taxonomy", "RefinableString08");
-            userMultipleTaxonomy = new ManagedProperty("User Custom Multiple Taxonomy", "RefinableString10");
+            new ManagedProperty("User Custom Text", "RefinableString04"),
+            new ManagedProperty("User Custom Email", "RefinableString05"),
+            new ManagedProperty("User Custom Boolean", "RefinableString06"),
+            new ManagedProperty("User Custom Person", "RefinableString07"),
+            new ManagedProperty("User Custom Single Taxonomy", "RefinableString08"),
+            new ManagedProperty("User Custom Multiple Taxonomy", "RefinableString10")
+            };
             this.ctx = ctx;
+        }
+
+        public void ShowAllPropertiesAndTheirIndexes()
+        {
+            for (int i = 0; i < arrayOfManagedProperties.Length; i++)
+            {
+                ManagedProperty currentProperty = arrayOfManagedProperties[i];
+                Console.WriteLine($"{currentProperty.DisplayName} : {i}");
+            }
+        }
+
+        public string GetDisplayNameByIndex(int i)
+        {
+            return arrayOfManagedProperties[i].DisplayName;
+        }
+
+        public void SetPropertyValueByIndex(int i, string value)
+        {
+            arrayOfManagedProperties[i].Value = value;
         }
 
         private void ShowResult(IDictionary<String, Object> resultRow)
@@ -45,11 +66,11 @@ namespace ConsoleCSOM
             Console.WriteLine($"Path: {resultRow["Path"]}");
         }
 
-        public void PerformSingleSearch(string keyword)
+        public void PerformSingleSearch(int index)
         {
             KeywordQuery keywordQuery = new KeywordQuery(ctx);
             SearchExecutor searchExecutor = new SearchExecutor(ctx);
-            keywordQuery.QueryText = keyword;
+            keywordQuery.QueryText = $"{arrayOfManagedProperties[index].ManagedPropertyName}:{arrayOfManagedProperties[index].Value}";
             keywordQuery.EnableSorting = true;
             keywordQuery.RowsPerPage = 10;
             keywordQuery.RowLimit = 100;
@@ -63,6 +84,7 @@ namespace ConsoleCSOM
                 return;
             }
             var resultRows = results.Value[0].ResultRows;
+            Console.WriteLine($"Found total {trows} row(s)");
             foreach (var resultRow in resultRows)
             {
                 ShowResult(resultRow);

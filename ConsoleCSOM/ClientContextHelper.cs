@@ -19,6 +19,7 @@ namespace ConsoleCSOM
 
         // Token cache handling
         private static readonly SemaphoreSlim semaphoreSlimTokens = new SemaphoreSlim(1);
+
         private AutoResetEvent tokenResetEvent = null;
         private readonly ConcurrentDictionary<string, string> tokenCache = new ConcurrentDictionary<string, string>();
         private bool disposedValue;
@@ -104,7 +105,6 @@ namespace ConsoleCSOM
                     );
 
                     return accessToken;
-
                 }
                 finally
                 {
@@ -113,7 +113,7 @@ namespace ConsoleCSOM
             }
             else
             {
-                Console.WriteLine($"Returning token from cache for resource {resourceUri.DnsSafeHost} and user {userPrincipalName}");
+                //Console.WriteLine($"Returning token from cache for resource {resourceUri.DnsSafeHost} and user {userPrincipalName}");
                 return accessTokenFromCache;
             }
         }

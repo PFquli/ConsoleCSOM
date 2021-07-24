@@ -1207,7 +1207,26 @@ namespace ConsoleCSOM
         private static void Search(ClientContext ctx)
         {
             QueryHandler queryHandler = new QueryHandler(ctx);
-            queryHandler.PerformSingleSearch("RefinableString00:Kevin");
+            int index;
+            while (true)
+            {
+                queryHandler.ShowAllPropertiesAndTheirIndexes();
+                Console.WriteLine("=============================");
+                Console.WriteLine("Choose a number associate with the property you want to search.");
+                string prop = Console.ReadLine();
+                if (int.TryParse(prop, out index))
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Number only. Please try again!");
+                }
+            }
+            Console.WriteLine($"Searching {queryHandler.GetDisplayNameByIndex(index)} with value:");
+            string value = Console.ReadLine();
+            queryHandler.SetPropertyValueByIndex(index, value);
+            queryHandler.PerformSingleSearch(index);
         }
 
         #endregion Search Training
