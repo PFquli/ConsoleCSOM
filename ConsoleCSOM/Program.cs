@@ -1207,26 +1207,65 @@ namespace ConsoleCSOM
         private static void Search(ClientContext ctx)
         {
             QueryHandler queryHandler = new QueryHandler(ctx);
-            int index;
-            while (true)
+            List<int> propIndex = new List<int>();
+            List<string> chaining = new List<string>();
+            bool isEnd = false;
+            while (!isEnd)
             {
-                queryHandler.ShowAllPropertiesAndTheirIndexes();
-                Console.WriteLine("=============================");
-                Console.WriteLine("Choose a number associate with the property you want to search.");
-                string prop = Console.ReadLine();
-                if (int.TryParse(prop, out index))
+                while (true)
                 {
-                    break;
+                    Console.WriteLine("=============================");
+                    queryHandler.ShowAllPropertiesAndTheirIndexes();
+                    Console.WriteLine("=============================");
+                    Console.WriteLine("Choose a number associate with the property you want to search.");
+                    string prop = Console.ReadLine();
+                    if (int.TryParse(prop, out _))
+                    {
+                        propIndex.Add(int.Parse(prop));
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Number only. Please try again!");
+                    }
                 }
-                else
+                Console.WriteLine($"Searching {queryHandler.GetDisplayNameByIndex(propIndex.ElementAt(propIndex.Count - 1))} with value:");
+                string value = Console.ReadLine();
+                queryHandler.SetPropertyValueByIndex(propIndex.ElementAt(propIndex.Count - 1), value);
+                while (true)
                 {
-                    Console.WriteLine("Number only. Please try again!");
+                    Console.WriteLine($"Include other property?");
+                    Console.WriteLine($"No : 0");
+                    Console.WriteLine($"AND : 1");
+                    Console.WriteLine($"OR : 2");
+                    var input = Console.ReadLine();
+                    if (int.TryParse(input, out _))
+                    {
+                        int temp = int.Parse(input);
+                        switch (temp)
+                        {
+                            case 1:
+                                chaining.Add("AND");
+                                break;
+
+                            case 2:
+                                chaining.Add("OR");
+                                break;
+
+                            default:
+                                isEnd = true;
+                                break;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Number only. Please try again!");
+                        Console.WriteLine("===================================");
+                    }
                 }
             }
-            Console.WriteLine($"Searching {queryHandler.GetDisplayNameByIndex(index)} with value:");
-            string value = Console.ReadLine();
-            queryHandler.SetPropertyValueByIndex(index, value);
-            queryHandler.PerformSingleSearch(index);
+            queryHandler.PerformSearch(propIndex, chaining);
         }
 
         #endregion Search Training

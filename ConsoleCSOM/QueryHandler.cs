@@ -90,5 +90,52 @@ namespace ConsoleCSOM
                 ShowResult(resultRow);
             }
         }
+
+        public void PerformChainingSearch(List<int> propIndex, List<string> chaining)
+        {
+            StringBuilder query = new StringBuilder();
+            for (int i = 0; i < propIndex.Count; i++)
+            {
+                if (i > 0)
+                {
+                    query.Append($" {chaining[i - 1]} ");
+                }
+                query.Append($"{arrayOfManagedProperties[propIndex[i]].ManagedPropertyName}:{arrayOfManagedProperties[propIndex[i]].Value}");
+            }
+            KeywordQuery keywordQuery = new KeywordQuery(ctx);
+            SearchExecutor searchExecutor = new SearchExecutor(ctx);
+            Console.WriteLine($"Chaining search query: {query.ToString()}");
+            keywordQuery.QueryText = query.ToString();
+            keywordQuery.EnableSorting = true;
+            keywordQuery.RowsPerPage = 10;
+            keywordQuery.RowLimit = 100;
+            keywordQuery.StartRow = 0;
+            ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
+            ctx.ExecuteQuery();
+            int trows = results.Value[0].TotalRows;
+            if (trows == 0)
+            {
+                Console.WriteLine("No result found. Please try again.");
+                return;
+            }
+            var resultRows = results.Value[0].ResultRows;
+            Console.WriteLine($"Found total {trows} row(s)");
+            foreach (var resultRow in resultRows)
+            {
+                ShowResult(resultRow);
+            }
+        }
+
+        public void PerformSearch(List<int> propIndex, List<string> chaining)
+        {
+            if (propIndex.Count < 2)
+            {
+                PerformSingleSearch(propIndex.ElementAt(0));
+            }
+            else
+            {
+                PerformChainingSearch(propIndex, chaining);
+            }
+        }
     }
 }
