@@ -66,12 +66,113 @@ namespace ConsoleCSOM
             Console.WriteLine($"Path: {resultRow["Path"]}");
         }
 
-        public void PerformSingleSearch(int index, string filter)
+        public void PerformSingleSearch(int index, List<string> filter)
         {
             KeywordQuery keywordQuery = new KeywordQuery(ctx);
             SearchExecutor searchExecutor = new SearchExecutor(ctx);
             Console.WriteLine("Performing single search for:");
             ManagedProperty searchProp = arrayOfManagedProperties[index];
+            if (filter.Count == 0)
+            {
+                Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value}");
+                keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value}";
+            }
+            else
+            {
+                string dateManagedPropertyName = arrayOfManagedProperties[6].ManagedPropertyName;
+                string dateDisplayName0 = arrayOfManagedProperties[6].DisplayName;
+                string dateDisplayName1 = arrayOfManagedProperties[7].DisplayName;
+                if (filter.Count > 1)
+                {
+                    Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value} AND {dateDisplayName0}/{dateDisplayName1} is between {filter.ElementAt(0)} and {filter.ElementAt(1)}");
+                    keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value} AND {dateManagedPropertyName}>={filter.ElementAt(0)} AND {dateManagedPropertyName}<={filter.ElementAt(1)}";
+                }
+                else
+                {
+                    Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value} AND {dateDisplayName0}/{dateDisplayName1} is {filter.ElementAt(0)}");
+                    keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value} AND {dateManagedPropertyName}={filter.ElementAt(0)}";
+                }
+            }
+            keywordQuery.EnableSorting = true;
+            keywordQuery.RowsPerPage = 10;
+            keywordQuery.RowLimit = 100;
+            keywordQuery.StartRow = 0;
+            ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
+            ctx.ExecuteQuery();
+            int trows = results.Value[0].TotalRows;
+            if (trows == 0)
+            {
+                Console.WriteLine("No result found. Please try again.");
+                return;
+            }
+            var resultRows = results.Value[0].ResultRows;
+            Console.WriteLine($"Found total {trows} row(s)");
+            foreach (var resultRow in resultRows)
+            {
+                ShowResult(resultRow);
+            }
+        }
+
+        public void PerformChainingSearch(List<int> propIndex, List<string> chaining, List<string> filter)
+        {
+            StringBuilder query = new StringBuilder();
+            Console.WriteLine("Performing chaining search for:");
+            for (int i = 0; i < propIndex.Count; i++)
+            {
+                ManagedProperty searchProp = arrayOfManagedProperties[propIndex[i]];
+                if (i > 0)
+                {
+                    query.Append($" {chaining[i - 1]} ");
+                    Console.Write($" {chaining[i - 1]} ");
+                }
+                query.Append($"{searchProp.ManagedPropertyName}:{searchProp.Value}");
+                Console.Write($"{searchProp.DisplayName} with a value of {searchProp.Value}");
+            }
+            if (filter.Count != 0)
+            {
+                string dateManagedPropertyName = arrayOfManagedProperties[6].ManagedPropertyName;
+                string dateDisplayName0 = arrayOfManagedProperties[6].DisplayName;
+                string dateDisplayName1 = arrayOfManagedProperties[7].DisplayName;
+                if (filter.Count > 1)
+                {
+                    Console.WriteLine($" AND {dateDisplayName0}/{dateDisplayName1} is between {filter.ElementAt(0)} and {filter.ElementAt(1)}");
+                    query.Append($" AND {dateManagedPropertyName}>={filter.ElementAt(0)} AND {dateManagedPropertyName}<={filter.ElementAt(1)}");
+                }
+                else
+                {
+                    Console.WriteLine($" AND {dateDisplayName0}/{dateDisplayName1} is {filter.ElementAt(0)}");
+                    query.Append($" AND {dateManagedPropertyName}={filter.ElementAt(0)}");
+                }
+            }
+            KeywordQuery keywordQuery = new KeywordQuery(ctx);
+            SearchExecutor searchExecutor = new SearchExecutor(ctx);
+            keywordQuery.QueryText = query.ToString();
+            keywordQuery.EnableSorting = true;
+            keywordQuery.RowsPerPage = 10;
+            keywordQuery.RowLimit = 100;
+            keywordQuery.StartRow = 0;
+            ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
+            ctx.ExecuteQuery();
+            int trows = results.Value[0].TotalRows;
+            if (trows == 0)
+            {
+                Console.WriteLine("No result found. Please try again.");
+                return;
+            }
+            var resultRows = results.Value[0].ResultRows;
+            Console.WriteLine($"Found total {trows} row(s)");
+            foreach (var resultRow in resultRows)
+            {
+                ShowResult(resultRow);
+            }
+        }
+
+        public void PerformingFullTextSearch(string query, string filter)
+        {
+            KeywordQuery keywordQuery = new KeywordQuery(ctx);
+            SearchExecutor searchExecutor = new SearchExecutor(ctx);
+            Console.WriteLine("Performing full-text search for:");
+            ManagedProperty searchProp = arrayOfManagedProperties[0];
             if (filter == "")
             {
                 Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value}");
@@ -102,50 +203,7 @@ namespace ConsoleCSOM
             }
         }
 
-        public void PerformChainingSearch(List<int> propIndex, List<string> chaining, string filter)
-        {
-            StringBuilder query = new StringBuilder();
-            Console.WriteLine("Performing chaining search for:");
-            for (int i = 0; i < propIndex.Count; i++)
-            {
-                ManagedProperty searchProp = arrayOfManagedProperties[propIndex[i]];
-                if (i > 0)
-                {
-                    query.Append($" {chaining[i - 1]} ");
-                    Console.Write($" {chaining[i - 1]} ");
-                }
-                query.Append($"{searchProp.ManagedPropertyName}:{searchProp.Value}");
-                Console.Write($"{searchProp.DisplayName} with a value of {searchProp.Value}");
-            }
-            if (filter != "")
-            {
-                Console.WriteLine($"AND last modified time is {filter}");
-                query.Append($" AND LastModifiedTime={filter}");
-            }
-            KeywordQuery keywordQuery = new KeywordQuery(ctx);
-            SearchExecutor searchExecutor = new SearchExecutor(ctx);
-            keywordQuery.QueryText = query.ToString();
-            keywordQuery.EnableSorting = true;
-            keywordQuery.RowsPerPage = 10;
-            keywordQuery.RowLimit = 100;
-            keywordQuery.StartRow = 0;
-            ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
-            ctx.ExecuteQuery();
-            int trows = results.Value[0].TotalRows;
-            if (trows == 0)
-            {
-                Console.WriteLine("No result found. Please try again.");
-                return;
-            }
-            var resultRows = results.Value[0].ResultRows;
-            Console.WriteLine($"Found total {trows} row(s)");
-            foreach (var resultRow in resultRows)
-            {
-                ShowResult(resultRow);
-            }
-        }
-
-        public void PerformSearch(List<int> propIndex, List<string> chaining, string filter)
+        public void PerformSearch(List<int> propIndex, List<string> chaining, List<string> filter)
         {
             if (propIndex.Count < 2)
             {

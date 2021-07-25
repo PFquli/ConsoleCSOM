@@ -1209,71 +1209,95 @@ namespace ConsoleCSOM
             QueryHandler queryHandler = new QueryHandler(ctx);
             List<int> propIndex = new List<int>();
             List<string> chaining = new List<string>();
-            string filter = "";
+            List<string> filter = new List<string>();
             bool isEnd = false;
-            while (!isEnd)
+            bool fullText = false;
+            while (true)
             {
-                while (true)
+                try
                 {
-                    Console.WriteLine("=============================");
-                    queryHandler.ShowAllPropertiesAndTheirIndexes();
-                    Console.WriteLine("=============================");
-                    Console.WriteLine("Choose a number associate with the property you want to search.");
-                    string prop = Console.ReadLine();
-                    if (int.TryParse(prop, out _))
-                    {
-                        propIndex.Add(int.Parse(prop));
-                        break;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Number only. Please try again!");
-                    }
+                    Console.WriteLine("===============================");
+                    Console.WriteLine("Full-text search or property search?");
+                    Console.WriteLine("Full-text: 0");
+                    Console.WriteLine("Property: 1");
+                    fullText = Console.ReadLine() == "0";
+                    break;
                 }
-                Console.WriteLine($"Searching {queryHandler.GetDisplayNameByIndex(propIndex.ElementAt(propIndex.Count - 1))} with value:");
-                string value = Console.ReadLine();
-                queryHandler.SetPropertyValueByIndex(propIndex.ElementAt(propIndex.Count - 1), value);
-                while (true)
+                catch (Exception e)
                 {
-                    Console.WriteLine($"Include other property?");
-                    Console.WriteLine($"No : 0");
-                    Console.WriteLine($"AND : 1");
-                    Console.WriteLine($"OR : 2");
-                    var input = Console.ReadLine();
-                    if (int.TryParse(input, out _))
+                    Console.WriteLine("Wrong input. Please try again!");
+                }
+            }
+            if (fullText)
+            {
+                Console.WriteLine("Input the value you want to search:");
+                var fullTextQuery = Console.ReadLine();
+            }
+            else
+            {
+                while (!isEnd)
+                {
+                    while (true)
                     {
-                        int temp = int.Parse(input);
-                        switch (temp)
+                        Console.WriteLine("=============================");
+                        queryHandler.ShowAllPropertiesAndTheirIndexes();
+                        Console.WriteLine("=============================");
+                        Console.WriteLine("Choose a number associate with the property you want to search.");
+                        string prop = Console.ReadLine();
+                        if (int.TryParse(prop, out _))
                         {
-                            case 1:
-                                chaining.Add("AND");
-                                break;
-
-                            case 2:
-                                chaining.Add("OR");
-                                break;
-
-                            default:
-                                isEnd = true;
-                                break;
+                            propIndex.Add(int.Parse(prop));
+                            break;
                         }
-                        break;
+                        else
+                        {
+                            Console.WriteLine("Number only. Please try again!");
+                        }
                     }
-                    else
+                    Console.WriteLine($"Searching {queryHandler.GetDisplayNameByIndex(propIndex.ElementAt(propIndex.Count - 1))} with value:");
+                    string value = Console.ReadLine();
+                    queryHandler.SetPropertyValueByIndex(propIndex.ElementAt(propIndex.Count - 1), value);
+                    while (true)
                     {
-                        Console.WriteLine("Number only. Please try again!");
-                        Console.WriteLine("===================================");
+                        Console.WriteLine($"Include other property?");
+                        Console.WriteLine($"No : 0");
+                        Console.WriteLine($"AND : 1");
+                        Console.WriteLine($"OR : 2");
+                        var input = Console.ReadLine();
+                        if (int.TryParse(input, out _))
+                        {
+                            int temp = int.Parse(input);
+                            switch (temp)
+                            {
+                                case 1:
+                                    chaining.Add("AND");
+                                    break;
+
+                                case 2:
+                                    chaining.Add("OR");
+                                    break;
+
+                                default:
+                                    isEnd = true;
+                                    break;
+                            }
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Number only. Please try again!");
+                            Console.WriteLine("===================================");
+                        }
                     }
                 }
             }
             while (true)
             {
+                Console.WriteLine("===================================");
                 Console.WriteLine("Add a time filter?");
                 Console.WriteLine($"No : 0");
-                Console.WriteLine($"Today : 1");
-                Console.WriteLine($"This week : 2");
-                Console.WriteLine($"This month : 3");
-                Console.WriteLine($"A specific date : 4");
+                Console.WriteLine($"A specific date : 1");
+                Console.WriteLine($"A time range : 2");
                 var range = Console.ReadLine();
                 if (int.TryParse(range, out _))
                 {
@@ -1281,18 +1305,6 @@ namespace ConsoleCSOM
                     switch (temp)
                     {
                         case 1:
-                            filter = "Today";
-                            break;
-
-                        case 2:
-                            filter = "This week";
-                            break;
-
-                        case 3:
-                            filter = "This month";
-                            break;
-
-                        case 4:
                             bool success = false;
                             while (!success)
                             {
@@ -1304,7 +1316,7 @@ namespace ConsoleCSOM
                                     int month = int.Parse(Console.ReadLine());
                                     Console.WriteLine("Year:");
                                     int year = int.Parse(Console.ReadLine());
-                                    filter = $"{year}-{month}-{day}";
+                                    filter.Add($"{year}-{month}-{day}");
                                     success = true;
                                 }
                                 catch (Exception e)
@@ -1312,6 +1324,35 @@ namespace ConsoleCSOM
                                     Console.WriteLine("Number only. Please try again!");
                                     Console.WriteLine("===================================");
                                     success = false;
+                                }
+                            }
+                            break;
+
+                        case 2:
+                            while (true)
+                            {
+                                try
+                                {
+                                    Console.WriteLine("From day:");
+                                    int fromDay = int.Parse(Console.ReadLine());
+                                    Console.WriteLine("From month:");
+                                    int fromMonth = int.Parse(Console.ReadLine());
+                                    Console.WriteLine("From year:");
+                                    int fromYear = int.Parse(Console.ReadLine());
+                                    filter.Add($"{fromYear}-{fromMonth}-{fromDay}");
+                                    Console.WriteLine("To day:");
+                                    int toDay = int.Parse(Console.ReadLine());
+                                    Console.WriteLine("To month:");
+                                    int toMonth = int.Parse(Console.ReadLine());
+                                    Console.WriteLine("To year:");
+                                    int toYear = int.Parse(Console.ReadLine());
+                                    filter.Add($"{toYear}-{toMonth}-{toDay}");
+                                    break;
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine("Number only. Please try again!");
+                                    Console.WriteLine("===================================");
                                 }
                             }
                             break;
