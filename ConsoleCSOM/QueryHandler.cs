@@ -66,11 +66,22 @@ namespace ConsoleCSOM
             Console.WriteLine($"Path: {resultRow["Path"]}");
         }
 
-        public void PerformSingleSearch(int index)
+        public void PerformSingleSearch(int index, string filter)
         {
             KeywordQuery keywordQuery = new KeywordQuery(ctx);
             SearchExecutor searchExecutor = new SearchExecutor(ctx);
-            keywordQuery.QueryText = $"{arrayOfManagedProperties[index].ManagedPropertyName}:{arrayOfManagedProperties[index].Value}";
+            Console.WriteLine("Performing single search for:");
+            ManagedProperty searchProp = arrayOfManagedProperties[index];
+            if (filter == "")
+            {
+                Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value}");
+                keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value}";
+            }
+            else
+            {
+                Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value} AND last modified time is {filter}");
+                keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value} AND LastModifiedTime={filter}";
+            }
             keywordQuery.EnableSorting = true;
             keywordQuery.RowsPerPage = 10;
             keywordQuery.RowLimit = 100;
@@ -91,20 +102,28 @@ namespace ConsoleCSOM
             }
         }
 
-        public void PerformChainingSearch(List<int> propIndex, List<string> chaining)
+        public void PerformChainingSearch(List<int> propIndex, List<string> chaining, string filter)
         {
             StringBuilder query = new StringBuilder();
+            Console.WriteLine("Performing chaining search for:");
             for (int i = 0; i < propIndex.Count; i++)
             {
+                ManagedProperty searchProp = arrayOfManagedProperties[propIndex[i]];
                 if (i > 0)
                 {
                     query.Append($" {chaining[i - 1]} ");
+                    Console.Write($" {chaining[i - 1]} ");
                 }
-                query.Append($"{arrayOfManagedProperties[propIndex[i]].ManagedPropertyName}:{arrayOfManagedProperties[propIndex[i]].Value}");
+                query.Append($"{searchProp.ManagedPropertyName}:{searchProp.Value}");
+                Console.Write($"{searchProp.DisplayName} with a value of {searchProp.Value}");
+            }
+            if (filter != "")
+            {
+                Console.WriteLine($"AND last modified time is {filter}");
+                query.Append($" AND LastModifiedTime={filter}");
             }
             KeywordQuery keywordQuery = new KeywordQuery(ctx);
             SearchExecutor searchExecutor = new SearchExecutor(ctx);
-            Console.WriteLine($"Chaining search query: {query.ToString()}");
             keywordQuery.QueryText = query.ToString();
             keywordQuery.EnableSorting = true;
             keywordQuery.RowsPerPage = 10;
@@ -126,15 +145,15 @@ namespace ConsoleCSOM
             }
         }
 
-        public void PerformSearch(List<int> propIndex, List<string> chaining)
+        public void PerformSearch(List<int> propIndex, List<string> chaining, string filter)
         {
             if (propIndex.Count < 2)
             {
-                PerformSingleSearch(propIndex.ElementAt(0));
+                PerformSingleSearch(propIndex.ElementAt(0), filter);
             }
             else
             {
-                PerformChainingSearch(propIndex, chaining);
+                PerformChainingSearch(propIndex, chaining, filter);
             }
         }
     }

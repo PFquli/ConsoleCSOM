@@ -1209,6 +1209,7 @@ namespace ConsoleCSOM
             QueryHandler queryHandler = new QueryHandler(ctx);
             List<int> propIndex = new List<int>();
             List<string> chaining = new List<string>();
+            string filter = "";
             bool isEnd = false;
             while (!isEnd)
             {
@@ -1265,7 +1266,68 @@ namespace ConsoleCSOM
                     }
                 }
             }
-            queryHandler.PerformSearch(propIndex, chaining);
+            while (true)
+            {
+                Console.WriteLine("Add a time filter?");
+                Console.WriteLine($"No : 0");
+                Console.WriteLine($"Today : 1");
+                Console.WriteLine($"This week : 2");
+                Console.WriteLine($"This month : 3");
+                Console.WriteLine($"A specific date : 4");
+                var range = Console.ReadLine();
+                if (int.TryParse(range, out _))
+                {
+                    int temp = int.Parse(range);
+                    switch (temp)
+                    {
+                        case 1:
+                            filter = "Today";
+                            break;
+
+                        case 2:
+                            filter = "This week";
+                            break;
+
+                        case 3:
+                            filter = "This month";
+                            break;
+
+                        case 4:
+                            bool success = false;
+                            while (!success)
+                            {
+                                try
+                                {
+                                    Console.WriteLine("Day:");
+                                    int day = int.Parse(Console.ReadLine());
+                                    Console.WriteLine("Month:");
+                                    int month = int.Parse(Console.ReadLine());
+                                    Console.WriteLine("Year:");
+                                    int year = int.Parse(Console.ReadLine());
+                                    filter = $"{year}-{month}-{day}";
+                                    success = true;
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine("Number only. Please try again!");
+                                    Console.WriteLine("===================================");
+                                    success = false;
+                                }
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Number only. Please try again!");
+                    Console.WriteLine("===================================");
+                }
+            }
+            queryHandler.PerformSearch(propIndex, chaining, filter);
         }
 
         #endregion Search Training
