@@ -167,21 +167,31 @@ namespace ConsoleCSOM
             }
         }
 
-        public void PerformingFullTextSearch(string query, string filter)
+        public void PerformingFullTextSearch(string query, List<string> filter)
         {
             KeywordQuery keywordQuery = new KeywordQuery(ctx);
             SearchExecutor searchExecutor = new SearchExecutor(ctx);
             Console.WriteLine("Performing full-text search for:");
-            ManagedProperty searchProp = arrayOfManagedProperties[0];
-            if (filter == "")
+            if (filter.Count == 0)
             {
-                Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value}");
-                keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value}";
+                Console.WriteLine($"{query}");
+                keywordQuery.QueryText = $"{query}";
             }
             else
             {
-                Console.WriteLine($"{searchProp.DisplayName} with value of {searchProp.Value} AND last modified time is {filter}");
-                keywordQuery.QueryText = $"{searchProp.ManagedPropertyName}:{searchProp.Value} AND LastModifiedTime={filter}";
+                string dateManagedPropertyName = arrayOfManagedProperties[6].ManagedPropertyName;
+                string dateDisplayName0 = arrayOfManagedProperties[6].DisplayName;
+                string dateDisplayName1 = arrayOfManagedProperties[7].DisplayName;
+                if (filter.Count > 1)
+                {
+                    Console.WriteLine($"{query} AND {dateDisplayName0}/{dateDisplayName1} is between {filter.ElementAt(0)} and {filter.ElementAt(1)}");
+                    keywordQuery.QueryText = $"{query} AND {dateManagedPropertyName}>={filter.ElementAt(0)} AND {dateManagedPropertyName}<={filter.ElementAt(1)}";
+                }
+                else
+                {
+                    Console.WriteLine($"{query} AND {dateDisplayName0}/{dateDisplayName1} is {filter.ElementAt(0)}");
+                    keywordQuery.QueryText = $"{query} AND {dateManagedPropertyName}={filter.ElementAt(0)}";
+                }
             }
             keywordQuery.EnableSorting = true;
             keywordQuery.RowsPerPage = 10;
@@ -203,7 +213,7 @@ namespace ConsoleCSOM
             }
         }
 
-        public void PerformSearch(List<int> propIndex, List<string> chaining, List<string> filter)
+        public void PerformPropertySearch(List<int> propIndex, List<string> chaining, List<string> filter)
         {
             if (propIndex.Count < 2)
             {

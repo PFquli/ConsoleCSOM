@@ -1212,6 +1212,7 @@ namespace ConsoleCSOM
             List<string> filter = new List<string>();
             bool isEnd = false;
             bool fullText = false;
+            var fullTextQuery = "";
             while (true)
             {
                 try
@@ -1231,7 +1232,7 @@ namespace ConsoleCSOM
             if (fullText)
             {
                 Console.WriteLine("Input the value you want to search:");
-                var fullTextQuery = Console.ReadLine();
+                fullTextQuery = Console.ReadLine();
             }
             else
             {
@@ -1368,7 +1369,14 @@ namespace ConsoleCSOM
                     Console.WriteLine("===================================");
                 }
             }
-            queryHandler.PerformSearch(propIndex, chaining, filter);
+            if (fullText)
+            {
+                queryHandler.PerformingFullTextSearch(fullTextQuery, filter);
+            }
+            else
+            {
+                queryHandler.PerformPropertySearch(propIndex, chaining, filter);
+            }
         }
 
         #endregion Search Training
