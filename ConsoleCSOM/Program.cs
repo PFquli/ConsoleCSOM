@@ -80,7 +80,7 @@ namespace ConsoleCSOM
                     //DeleteGroupFromSite(ctx);
                     //CreateTestGroupWithTestLevelAndAddUser(ctx);
                     //GetInheritedGroupFromSubsite(ctx);
-                    Search(ctx);
+                    SearchConsoleApp(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -1376,6 +1376,41 @@ namespace ConsoleCSOM
             else
             {
                 queryHandler.PerformPropertySearch(propIndex, chaining, filter);
+            }
+        }
+
+        private static void SearchConsoleApp(ClientContext ctx)
+        {
+            while (true)
+            {
+                Console.Clear();
+                Search(ctx);
+                bool restart = true;
+                while (true)
+                {
+                    Console.WriteLine("==============================");
+                    Console.WriteLine("Do you want to search other things?");
+                    Console.WriteLine("Yes : 0");
+                    Console.WriteLine("No : 1");
+                    var temp = Console.ReadLine();
+                    if (int.TryParse(temp, out _))
+                    {
+                        var ans = int.Parse(temp);
+                        if (ans == 1)
+                        {
+                            restart = false;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Number only. Please try again!");
+                    }
+                }
+                if (!restart)
+                {
+                    break;
+                }
             }
         }
 
