@@ -62,8 +62,14 @@ namespace ConsoleCSOM
             Console.WriteLine("====================================");
             Console.WriteLine($"Title: {resultRow["Title"]} ");
             Console.WriteLine($"Author: {resultRow["Author"]} ");
-            Console.WriteLine($"SiteName: {resultRow["SiteName"]}");
+            Console.WriteLine($"Site Name: {resultRow["SiteName"]}");
             Console.WriteLine($"Path: {resultRow["Path"]}");
+            Console.WriteLine($"First Name: {resultRow["RefinableString00"]}");
+            Console.WriteLine($"Book Genre/Book Category: {resultRow["RefinableString01"]}");
+            Console.WriteLine($"Is Member: {resultRow["RefinableString02"]}");
+            Console.WriteLine($"Group Leaders/Monitors: {resultRow["RefinableString03"]}");
+            Console.WriteLine($"Return Date/Borrow End Date: {resultRow["RefinableDate00"]}");
+            Console.WriteLine($"Borrowed Book Quantity: {resultRow["RefinableInt00"]}");
         }
 
         public void PerformSingleSearch(int index, List<string> filter)
@@ -97,6 +103,12 @@ namespace ConsoleCSOM
             keywordQuery.RowsPerPage = 10;
             keywordQuery.RowLimit = 100;
             keywordQuery.StartRow = 0;
+            keywordQuery.SelectProperties.Add("RefinableDate00");
+            keywordQuery.SelectProperties.Add("RefinableInt00");
+            keywordQuery.SelectProperties.Add("RefinableString00");
+            keywordQuery.SelectProperties.Add("RefinableString01");
+            keywordQuery.SelectProperties.Add("RefinableString02");
+            keywordQuery.SelectProperties.Add("RefinableString03");
             ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
             ctx.ExecuteQuery();
             int trows = results.Value[0].TotalRows;
@@ -126,7 +138,7 @@ namespace ConsoleCSOM
                     Console.Write($" {chaining[i - 1]} ");
                 }
                 query.Append($"{searchProp.ManagedPropertyName}:{searchProp.Value}");
-                Console.Write($"{searchProp.DisplayName} with a value of {searchProp.Value}");
+                Console.WriteLine($"{searchProp.DisplayName} with a value of {searchProp.Value}");
             }
             if (filter.Count != 0)
             {
@@ -151,6 +163,12 @@ namespace ConsoleCSOM
             keywordQuery.RowsPerPage = 10;
             keywordQuery.RowLimit = 100;
             keywordQuery.StartRow = 0;
+            keywordQuery.SelectProperties.Add("RefinableDate00");
+            keywordQuery.SelectProperties.Add("RefinableInt00");
+            keywordQuery.SelectProperties.Add("RefinableString00");
+            keywordQuery.SelectProperties.Add("RefinableString01");
+            keywordQuery.SelectProperties.Add("RefinableString02");
+            keywordQuery.SelectProperties.Add("RefinableString03");
             ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
             ctx.ExecuteQuery();
             int trows = results.Value[0].TotalRows;
@@ -197,6 +215,12 @@ namespace ConsoleCSOM
             keywordQuery.RowsPerPage = 10;
             keywordQuery.RowLimit = 100;
             keywordQuery.StartRow = 0;
+            keywordQuery.SelectProperties.Add("RefinableDate00");
+            keywordQuery.SelectProperties.Add("RefinableInt00");
+            keywordQuery.SelectProperties.Add("RefinableString00");
+            keywordQuery.SelectProperties.Add("RefinableString01");
+            keywordQuery.SelectProperties.Add("RefinableString02");
+            keywordQuery.SelectProperties.Add("RefinableString03");
             ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(keywordQuery);
             ctx.ExecuteQuery();
             int trows = results.Value[0].TotalRows;

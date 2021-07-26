@@ -1389,7 +1389,7 @@ namespace ConsoleCSOM
                 while (true)
                 {
                     Console.WriteLine("==============================");
-                    Console.WriteLine("Do you want to search other things?");
+                    Console.WriteLine("Do you want to try again?");
                     Console.WriteLine("Yes : 0");
                     Console.WriteLine("No : 1");
                     var temp = Console.ReadLine();
