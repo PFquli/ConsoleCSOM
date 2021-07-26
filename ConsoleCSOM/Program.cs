@@ -80,7 +80,15 @@ namespace ConsoleCSOM
                     //DeleteGroupFromSite(ctx);
                     //CreateTestGroupWithTestLevelAndAddUser(ctx);
                     //GetInheritedGroupFromSubsite(ctx);
-                    SearchConsoleApp(ctx);
+
+                    UpdateTestBoolPropertyInCurrentUserProfile(ctx, "true");
+                    UpdateTestTextPropertyInCurrentUserProfile(ctx, "Updated text");
+                    UpdateTestDatePropertyInCurrentUserProfile(ctx, "26-12-2021");
+                    UpdateTestIntegerPropertyInCurrentUserProfile(ctx, "123");
+                    UpdateTestEmailPropertyInCurrentUserProfile(ctx, "testing@testmail.com");
+                    UpdateTestPersonPropertyInCurrentUserProfile(ctx, "user@mystartpoint.onmicrosoft.com");
+                    UpdateTestSingleTaxonomyPropertyInCurrentUserProfile(ctx, "Rome");
+                    UpdateTestMultipleTaxonomyPropertyInCurrentUserProfile(ctx, new List<string>() { "Ho Chi Minh", "Stockholm" });
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -1191,13 +1199,97 @@ namespace ConsoleCSOM
 
         #region User Profile Training
 
-        private static void UpdateTestBoolPropertyInUserProfile(ClientContext ctx)
+        private static void UpdateTestTextPropertyInCurrentUserProfile(ClientContext ctx, string newValue)
         {
-            Web web = ctx.Web;
-            User user = web.EnsureUser("quoc.lien.hiep@preciofishbone.se");
-            ctx.Load(user);
             PeopleManager peopleManager = new PeopleManager(ctx);
-            // Todo: continue with User Profile updating using CSOM
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestText", newValue);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestBoolPropertyInCurrentUserProfile(ClientContext ctx, string newValue)
+        {
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestBool", newValue);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestEmailPropertyInCurrentUserProfile(ClientContext ctx, string newValue)
+        {
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestEmail", newValue);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestDatePropertyInCurrentUserProfile(ClientContext ctx, string newValue)
+        {
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestDate", newValue);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestIntegerPropertyInCurrentUserProfile(ClientContext ctx, string newValue)
+        {
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestInteger", newValue);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestPersonPropertyInCurrentUserProfile(ClientContext ctx, string newValue)
+        {
+            User user = ctx.Web.EnsureUser(newValue);
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(user, u => u.LoginName);
+            ctx.ExecuteQuery();
+            PersonProperties personProperties1 = peopleManager.GetPropertiesFor(user.LoginName);
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.Load(personProperties1, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestPerson", personProperties1.AccountName);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestSingleTaxonomyPropertyInCurrentUserProfile(ClientContext ctx, string newValue)
+        {
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetSingleValueProfileProperty(personProperties.AccountName, "TestSingleTaxonomy", newValue);
+            ctx.ExecuteQuery();
+        }
+
+        private static void UpdateTestMultipleTaxonomyPropertyInCurrentUserProfile(ClientContext ctx, List<string> newValue)
+        {
+            PeopleManager peopleManager = new PeopleManager(ctx);
+            PersonProperties personProperties = peopleManager.GetMyProperties();
+            ctx.Load(personProperties, p => p.AccountName);
+            ctx.ExecuteQuery();
+
+            peopleManager.SetMultiValuedProfileProperty(personProperties.AccountName, "TestMultipleTaxonomy", newValue);
+            ctx.ExecuteQuery();
         }
 
         #endregion User Profile Training
