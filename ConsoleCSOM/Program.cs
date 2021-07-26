@@ -81,14 +81,15 @@ namespace ConsoleCSOM
                     //CreateTestGroupWithTestLevelAndAddUser(ctx);
                     //GetInheritedGroupFromSubsite(ctx);
 
-                    UpdateTestBoolPropertyInCurrentUserProfile(ctx, "true");
-                    UpdateTestTextPropertyInCurrentUserProfile(ctx, "Updated text");
-                    UpdateTestDatePropertyInCurrentUserProfile(ctx, "26-12-2021");
-                    UpdateTestIntegerPropertyInCurrentUserProfile(ctx, "123");
-                    UpdateTestEmailPropertyInCurrentUserProfile(ctx, "testing@testmail.com");
-                    UpdateTestPersonPropertyInCurrentUserProfile(ctx, "user@mystartpoint.onmicrosoft.com");
-                    UpdateTestSingleTaxonomyPropertyInCurrentUserProfile(ctx, "Rome");
-                    UpdateTestMultipleTaxonomyPropertyInCurrentUserProfile(ctx, new List<string>() { "Ho Chi Minh", "Stockholm" });
+                    //UpdateTestBoolPropertyInCurrentUserProfile(ctx, "true");
+                    //UpdateTestTextPropertyInCurrentUserProfile(ctx, "Updated text");
+                    //UpdateTestDatePropertyInCurrentUserProfile(ctx, "2021-7-26");
+                    //UpdateTestIntegerPropertyInCurrentUserProfile(ctx, "123");
+                    //UpdateTestEmailPropertyInCurrentUserProfile(ctx, "testing@testmail.com");
+                    //UpdateTestPersonPropertyInCurrentUserProfile(ctx, "User Unknown");
+                    //UpdateTestSingleTaxonomyPropertyInCurrentUserProfile(ctx, "Rome");
+                    //UpdateTestMultipleTaxonomyPropertyInCurrentUserProfile(ctx, new List<string>() { "Ho Chi Minh", "Stockholm" });
+                    UserProfileConsoleApp(ctx);
                 }
 
                 Console.WriteLine($"Press Any Key To Stop!");
@@ -1290,6 +1291,177 @@ namespace ConsoleCSOM
 
             peopleManager.SetMultiValuedProfileProperty(personProperties.AccountName, "TestMultipleTaxonomy", newValue);
             ctx.ExecuteQuery();
+        }
+
+        private static void UserProfileConsoleApp(ClientContext ctx)
+        {
+            int ans0;
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("Choose the user profile property you want to update");
+                Console.WriteLine("TestText : 1");
+                Console.WriteLine("TestEmail : 2");
+                Console.WriteLine("TestDate : 3");
+                Console.WriteLine("TestBool : 4");
+                Console.WriteLine("TestInteger : 5");
+                Console.WriteLine("TestPerson : 6");
+                Console.WriteLine("TestSingleTaxonomy : 7");
+                Console.WriteLine("TestMultipleTaxonomy : 8");
+                string temp = Console.ReadLine();
+                if (int.TryParse(temp, out ans0))
+                {
+                    break;
+                }
+            }
+            switch (ans0)
+            {
+                case 1:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestText. Notice there's a limit in string length.");
+                            string temp = Console.ReadLine();
+                            UpdateTestTextPropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 2:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestEmail. Notice the email format.");
+                            string temp = Console.ReadLine();
+                            UpdateTestEmailPropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 3:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestDate. The format is YYYY-MM-DD or MM-DD-YYYY.");
+                            string temp = Console.ReadLine();
+                            UpdateTestDatePropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 4:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestBool(true/false).");
+                            string temp = Console.ReadLine();
+                            UpdateTestBoolPropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 5:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestInteger.");
+                            string temp = Console.ReadLine();
+                            UpdateTestIntegerPropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 6:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestPerson. Currently available: Quoc Lien and User Unknown");
+                            string temp = Console.ReadLine();
+                            UpdateTestPersonPropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 7:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestSingleTaxonomy. Use term name for this language.");
+                            string temp = Console.ReadLine();
+                            UpdateTestSingleTaxonomyPropertyInCurrentUserProfile(ctx, temp);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+
+                case 8:
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("New value for TestMultipleTaxonomy. Use term names for this language. Separate names by comma.");
+                            string temp = Console.ReadLine();
+                            List<string> result = temp.Split(",").ToList();
+                            UpdateTestMultipleTaxonomyPropertyInCurrentUserProfile(ctx, result);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Please try again.");
+                            Console.WriteLine("=====================================");
+                        }
+                    }
+                    break;
+            }
+            Console.WriteLine("Update successfully. Please check use profile admin");
         }
 
         #endregion User Profile Training
